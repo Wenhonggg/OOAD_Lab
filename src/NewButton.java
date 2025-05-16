@@ -14,18 +14,18 @@ public class NewButton extends JButton {
         addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                int x = 0, y = 0;
+                int x = getX(), y = getY();
                 String position = parent.getToolbarPosition();
                 JPopupMenu chooseCanvas = createPopupMenu();
 
                 if ("NORTH".equals(position))
-                    y = getHeight();
+                    y += getHeight();
                 else if ("SOUTH".equals(position))
-                    y = 0 - chooseCanvas.getPreferredSize().height;
+                    y -= chooseCanvas.getPreferredSize().height;
                 else if ("WEST".equals(position))
-                    x = getWidth();
+                    x += getWidth();
                 else
-                    x = 0 - chooseCanvas.getPreferredSize().width - 5;
+                    x -= chooseCanvas.getPreferredSize().width + 5;
 
                 chooseCanvas.show(parent, x, y);
             }

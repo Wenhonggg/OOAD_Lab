@@ -5,10 +5,10 @@ import java.awt.event.ActionListener;
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.plaf.basic.BasicButtonUI;
 import javax.swing.plaf.basic.BasicSliderUI;
 
 public class DrawingToolPanel extends JPanel {
-    // store original dimension values for resetting
     private final int HORIZONTAL_SLIDER_WIDTH = 150;
     private final int HORIZONTAL_SLIDER_HEIGHT = 30;
     private final int VERTICAL_SLIDER_WIDTH = 30;
@@ -68,6 +68,11 @@ public class DrawingToolPanel extends JPanel {
         sliderPanel.add(sizeLabel);
 
         // create colour chooser
+        JPanel jccPanel = new JPanel();
+        jccPanel.add(createColourPaletteBtn(Color.black));
+        jccPanel.add(createColourPaletteBtn(Color.red));
+        jccPanel.add(createColourPaletteBtn(Color.magenta));
+
         jccBtn = new JButton("jcc");
         jccBtn.addActionListener(new ActionListener() {
             @Override
@@ -83,6 +88,7 @@ public class DrawingToolPanel extends JPanel {
         add(brush);
         add(eraser);
         add(sliderPanel);
+        add(jccPanel);
         add(jccBtn);
     }
 
@@ -143,7 +149,7 @@ public class DrawingToolPanel extends JPanel {
             add(eraser);
             add(Box.createRigidArea(new Dimension(0, 5)));
             add(sliderPanel);
-            add(Box.createRigidArea(new Dimension(0, 10))); // Increased spacing before jccBtn
+            add(Box.createRigidArea(new Dimension(0, 10)));
             add(jccBtn);
         }
 
@@ -215,5 +221,25 @@ public class DrawingToolPanel extends JPanel {
                 g2.dispose();
             }
         };
+    }
+
+    private JButton createColourPaletteBtn(Color color) {
+        final int DIAMETER = 24;
+        JButton btn = new JButton();
+        btn.setPreferredSize(new Dimension(DIAMETER, DIAMETER));
+        btn.setContentAreaFilled(false); // disable default rectangular background
+        btn.setFocusPainted(false);
+        btn.setBorderPainted(false);
+        btn.setUI(new BasicButtonUI() {
+            @Override
+            public void paint(Graphics g, JComponent c) {
+                Graphics2D g2 = (Graphics2D) g;
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(color);
+                g2.fillOval(0, 0, DIAMETER, DIAMETER);
+            }
+
+        });
+        return btn;
     }
 }

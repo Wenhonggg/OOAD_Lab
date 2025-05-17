@@ -1,6 +1,8 @@
 
 import java.awt.event.*;
+import java.io.File;
 
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
@@ -9,7 +11,8 @@ public class NewButton extends JButton {
     Toolbar parent;
 
     public NewButton(Toolbar tb) {
-        super("New");
+        super();
+        setIcon(new ImageIcon(ImageButton.resizeImage(new File("assets/toolbarIcons/newIcon.png"), 30, 30)));
         parent = tb;
         addActionListener(new ActionListener() {
             @Override

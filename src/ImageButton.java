@@ -18,19 +18,21 @@ public class ImageButton extends JButton {
             case 0:
                 this.type = "Animal";
                 filePath = "assets/animals";
+                setIcon(new ImageIcon(resizeImage(new File("assets/toolbarIcons/animalIcon.png"), 30, 30)));
                 break;
             case 1:
                 this.type = "Flower";
                 filePath = "assets/flowers";
+                setIcon(new ImageIcon(resizeImage(new File("assets/toolbarIcons/flowerIcon.png"), 30, 30)));
                 break;
             case 2:
                 this.type = "Custom";
                 filePath = "assets/custom";
+                setIcon(new ImageIcon(resizeImage(new File("assets/toolbarIcons/customIcon.png"), 30, 30)));
                 break;
             default:
                 break;
         }
-        setText(this.type);
         addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -81,8 +83,7 @@ public class ImageButton extends JButton {
 
                     imagesPanel = new JPanel(new GridLayout(Math.ceilDiv(fileCount, 3), 3, 0, 10));
                     for (File file : files) {
-                        Image originalImage = new ImageIcon(file.getAbsolutePath()).getImage();
-                        Image scaledImage = originalImage.getScaledInstance(132, 132, java.awt.Image.SCALE_SMOOTH);
+                        Image scaledImage = resizeImage(file, 132, 132);
                         JLabel imageLabel = new JLabel(new ImageIcon(scaledImage));
                         imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
                         imagesPanel.add(imageLabel);
@@ -123,5 +124,11 @@ public class ImageButton extends JButton {
             }
         };
         worker.execute();
+    }
+
+    public static Image resizeImage(File file, int w, int h) {
+        Image originalImage = new ImageIcon(file.getAbsolutePath()).getImage();
+        Image scaledImage = originalImage.getScaledInstance(w, h, java.awt.Image.SCALE_SMOOTH);
+        return scaledImage;
     }
 }

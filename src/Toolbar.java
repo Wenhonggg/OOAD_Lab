@@ -45,5 +45,4 @@ public class Toolbar extends JToolBar {
                 return "SOUTH";
         }
     }
-
 }

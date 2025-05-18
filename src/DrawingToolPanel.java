@@ -44,10 +44,7 @@ public class DrawingToolPanel extends JPanel {
         savedColours.add(Color.YELLOW);
         savedColours.add(Color.GREEN);
         savedColours.add(Color.BLUE);
-        savedColours.add(Color.MAGENTA);
-        savedColours.add(Color.CYAN);
         savedColours.add(Color.PINK);
-        savedColours.add(Color.GRAY);
 
         setOpaque(false);
 
@@ -140,7 +137,6 @@ public class DrawingToolPanel extends JPanel {
             sliderPanel.removeAll();
             sliderPanel.setLayout(new BoxLayout(sliderPanel, BoxLayout.Y_AXIS));
             sliderPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
-            sliderPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
             JPanel sliderContainer = new JPanel();
             sliderContainer.setLayout(new FlowLayout(FlowLayout.CENTER));
@@ -161,7 +157,6 @@ public class DrawingToolPanel extends JPanel {
             labelPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
             labelPanel.setOpaque(false);
             sliderPanel.add(labelPanel);
-            sliderPanel.add(Box.createRigidArea(new Dimension(0, 5)));
 
             createColourPalettePanel(jccPanel, true);
 

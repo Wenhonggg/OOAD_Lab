@@ -1,2 +1,2 @@
 # OOAD_Lab
-# This is a very simple Java OOAD LAB.
+# This is a very <s>simple</s> TORTURING Java OOAD LAB.

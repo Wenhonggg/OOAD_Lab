@@ -1,6 +1,7 @@
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -49,7 +50,7 @@ public class ImageButton extends JButton {
 
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(new EmptyBorder(20, 20, 20, 20));
-        JLabel label = new JLabel("Click on an image to add it to the canvas!");
+        JLabel label = new JLabel("Click on an image to add it to the canvas or drag and drop!");
         panel.add(label, BorderLayout.NORTH);
 
         // placeholder while images are loading
@@ -95,67 +96,10 @@ public class ImageButton extends JButton {
                         imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
                         imageContainer.add(imageLabel, BorderLayout.CENTER);
                         
-                        // Add mouse listeners for visual feedback and selection
-                        imageContainer.addMouseListener(new java.awt.event.MouseAdapter() {
-                            @Override
-                            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                                // Change border on hover to highlight selection
-                                imageContainer.setBorder(BorderFactory.createCompoundBorder(
-                                    BorderFactory.createLineBorder(new Color(0, 123, 255), 3),
-                                    BorderFactory.createEmptyBorder(2, 2, 2, 2)
-                                ));
-                                imageContainer.setCursor(new Cursor(Cursor.HAND_CURSOR));
-                                imageContainer.revalidate();
-                                imageContainer.repaint();
-                            }
-                            
-                            @Override
-                            public void mouseExited(java.awt.event.MouseEvent evt) {
-                                // Remove border when not hovering
-                                imageContainer.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-                                imageContainer.revalidate();
-                                imageContainer.repaint();
-                            }
-                            
-                            @Override
-                            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                                // Find the left canvas and add the image to it
-                                Component[] components = frame.getContentPane().getComponents();
-                                for (Component component : components) {
-                                    if (component instanceof JPanel) {
-                                        JPanel mainPanel = (JPanel) component;
-                                        Component[] mainPanelComponents = mainPanel.getComponents();
-                                        for (Component mainPanelComponent : mainPanelComponents) {
-                                            if (mainPanelComponent instanceof JPanel && 
-                                                ((JPanel) mainPanelComponent).getComponent(0) instanceof LeftCanvas) {
-                                                LeftCanvas leftCanvas = (LeftCanvas) ((JPanel) mainPanelComponent).getComponent(0);
-                                                leftCanvas.addImage(imagePath);
-                                                dialog.dispose();
-                                                return;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            
-                            @Override
-                            public void mousePressed(java.awt.event.MouseEvent evt) {
-                                // Show "clicking" effect with a darker border
-                                imageContainer.setBorder(BorderFactory.createCompoundBorder(
-                                    BorderFactory.createLineBorder(new Color(0, 86, 179), 3),
-                                    BorderFactory.createEmptyBorder(2, 2, 2, 2)
-                                ));
-                            }
-                            
-                            @Override
-                            public void mouseReleased(java.awt.event.MouseEvent evt) {
-                                // Return to hover state after click is released
-                                imageContainer.setBorder(BorderFactory.createCompoundBorder(
-                                    BorderFactory.createLineBorder(new Color(0, 123, 255), 3),
-                                    BorderFactory.createEmptyBorder(2, 2, 2, 2)
-                                ));
-                            }
-                        });
+                        // Add mouse listeners for visual feedback, selection, and drag
+                        MouseDragHandler dragHandler = new MouseDragHandler(imageContainer, imagePath, dialog, frame);
+                        imageContainer.addMouseListener(dragHandler);
+                        imageContainer.addMouseMotionListener(dragHandler);
                         
                         imagesPanel.add(imageContainer);
                     }
@@ -202,5 +146,179 @@ public class ImageButton extends JButton {
             }
         };
         worker.execute();
+    }
+    
+    // New inner class to handle both click and drag-and-drop functionality
+    private class MouseDragHandler extends java.awt.event.MouseAdapter {
+        private JPanel imageContainer;
+        private String imagePath;
+        private JDialog dialog;
+        private JFrame mainFrame;
+        private Point dragStart;
+        private JWindow dragImage;
+        private boolean isDragging = false;
+        
+        public MouseDragHandler(JPanel container, String path, JDialog dlg, JFrame frame) {
+            imageContainer = container;
+            imagePath = path;
+            dialog = dlg;
+            mainFrame = frame;
+        }
+        
+        @Override
+        public void mouseEntered(MouseEvent evt) {
+            // Change border on hover to highlight selection
+            imageContainer.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(0, 123, 255), 3),
+                BorderFactory.createEmptyBorder(2, 2, 2, 2)
+            ));
+            imageContainer.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            imageContainer.revalidate();
+            imageContainer.repaint();
+        }
+        
+        @Override
+        public void mouseExited(MouseEvent evt) {
+            // Only remove border if not dragging
+            if (!isDragging) {
+                imageContainer.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+                imageContainer.revalidate();
+                imageContainer.repaint();
+            }
+        }
+        
+        @Override
+        public void mouseClicked(MouseEvent evt) {
+            // Keep original click-to-add behavior
+            findAndAddImageToLeftCanvas(imagePath);
+            dialog.dispose();
+        }
+        
+        @Override
+        public void mousePressed(MouseEvent evt) {
+            // Store drag start position and show clicking effect
+            dragStart = evt.getPoint();
+            imageContainer.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(0, 86, 179), 3),
+                BorderFactory.createEmptyBorder(2, 2, 2, 2)
+            ));
+        }
+        
+        @Override
+        public void mouseReleased(MouseEvent evt) {
+            // Handle drag end and drop
+            if (isDragging) {
+                isDragging = false;
+                if (dragImage != null) {
+                    dragImage.dispose();
+                    dragImage = null;
+                }
+                
+                // Get screen position
+                Point screenPos = evt.getLocationOnScreen();
+                
+                // Find if we're over the left canvas
+                LeftCanvas leftCanvas = findLeftCanvas();
+                if (leftCanvas != null) {
+                    Point canvasPos = leftCanvas.getLocationOnScreen();
+                    Rectangle canvasBounds = new Rectangle(
+                        canvasPos.x, 
+                        canvasPos.y, 
+                        leftCanvas.getWidth(), 
+                        leftCanvas.getHeight()
+                    );
+                    
+                    // If dropped on the canvas
+                    if (canvasBounds.contains(screenPos)) {
+                        // Add the image to the canvas at specific position
+                        Point relativePos = new Point(
+                            screenPos.x - canvasPos.x - 75, // Center image horizontally (150/2)
+                            screenPos.y - canvasPos.y - 75  // Center image vertically (150/2)
+                        );
+                        
+                        addImageToCanvasAt(leftCanvas, imagePath, relativePos);
+                        dialog.dispose();
+                    }
+                }
+            }
+            
+            // Reset border to hover state
+            imageContainer.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(0, 123, 255), 3),
+                BorderFactory.createEmptyBorder(2, 2, 2, 2)
+            ));
+        }
+        
+        @Override
+        public void mouseDragged(MouseEvent evt) {
+            if (dragStart != null) {
+                // Start dragging after moving a bit
+                int dragThreshold = 5;
+                Point currentPoint = evt.getPoint();
+                if (!isDragging && 
+                    (Math.abs(currentPoint.x - dragStart.x) > dragThreshold || 
+                     Math.abs(currentPoint.y - dragStart.y) > dragThreshold)) {
+                    
+                    // Begin drag operation
+                    isDragging = true;
+                    
+                    // Create a drag image
+                    if (dragImage == null) {
+                        dragImage = new JWindow();
+                        JLabel dragLabel = new JLabel();
+                        
+                        Image originalImage = new ImageIcon(imagePath).getImage();
+                        Image scaledImage = originalImage.getScaledInstance(100, 100, Image.SCALE_SMOOTH);
+                        dragLabel.setIcon(new ImageIcon(scaledImage));
+                        
+                        dragImage.add(dragLabel);
+                        dragImage.pack();
+                        dragImage.setOpacity(0.7f);
+                    }
+                }
+                
+                // Update drag image position if dragging
+                if (isDragging && dragImage != null) {
+                    Point screenLoc = evt.getLocationOnScreen();
+                    dragImage.setLocation(
+                        screenLoc.x - (dragImage.getWidth() / 2),
+                        screenLoc.y - (dragImage.getHeight() / 2)
+                    );
+                    dragImage.setVisible(true);
+                }
+            }
+        }
+        
+        // Helper methods
+        private LeftCanvas findLeftCanvas() {
+            Component[] components = mainFrame.getContentPane().getComponents();
+            for (Component component : components) {
+                if (component instanceof JPanel) {
+                    JPanel mainPanel = (JPanel) component;
+                    Component[] mainPanelComponents = mainPanel.getComponents();
+                    for (Component mainPanelComponent : mainPanelComponents) {
+                        if (mainPanelComponent instanceof JPanel && 
+                            ((JPanel) mainPanelComponent).getComponent(0) instanceof LeftCanvas) {
+                            return (LeftCanvas) ((JPanel) mainPanelComponent).getComponent(0);
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+        
+        private void findAndAddImageToLeftCanvas(String path) {
+            LeftCanvas leftCanvas = findLeftCanvas();
+            if (leftCanvas != null) {
+                leftCanvas.addImage(path);
+            }
+        }
+        
+        private void addImageToCanvasAt(LeftCanvas canvas, String path, Point position) {
+            // We need to add this method to LeftCanvas
+            if (canvas != null) {
+                canvas.addImageAt(path, position.x, position.y);
+            }
+        }
     }
 }

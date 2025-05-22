@@ -45,12 +45,12 @@ public class ImageButton extends JButton {
 
     private void showImages() {
         JDialog dialog = new JDialog(frame, "Insert Image");
-        dialog.setSize(500, 500);
+        dialog.setSize(517, 500);
         dialog.setLocationRelativeTo(frame);
 
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(new EmptyBorder(20, 20, 20, 20));
-        JLabel label = new JLabel("Click on an image to add it to the canvas or drag and drop!");
+        JLabel label = new JLabel("Drag and drop an image to the left canvas! ");
         panel.add(label, BorderLayout.NORTH);
 
         // placeholder while images are loading
@@ -65,6 +65,108 @@ public class ImageButton extends JButton {
                 dialog.dispose();
             }
         });
+
+        // Add Import button only for Custom image type
+        if (type == "Custom") {
+            JButton importBtn = new JButton("Import");
+            importBtn.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    JFileChooser fileChooser = new JFileChooser();
+                    fileChooser.setDialogTitle("Import an Image");
+                    
+                    // Set to DETAILS_VIEW explicitly
+                    try {
+                        // Use the default file view
+                        fileChooser.setFileView(fileChooser.getUI().getFileView(fileChooser));
+                        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                        
+                        // Set the view type using UIManager
+                        UIManager.put("FileChooser.viewTypeProperty", "detailsView");
+                        
+                        // Optional: For newer Java versions you can try this instead of reflection
+                        fileChooser.putClientProperty("JFileChooser.viewType", "details");
+                    } catch (Exception ex) {
+                        // Fallback if customization fails
+                        System.out.println("Could not set details view: " + ex.getMessage());
+                    }
+                    
+                    // Set preferred size to make it taller than wide
+                    fileChooser.setPreferredSize(new Dimension(700, 500));
+                    
+                    // Set file filter to only show image files
+                    fileChooser.setFileFilter(new javax.swing.filechooser.FileFilter() {
+                        @Override
+                        public boolean accept(File f) {
+                            if (f.isDirectory()) {
+                                return true;
+                            }
+                            String name = f.getName().toLowerCase();
+                            return name.endsWith(".jpg") || name.endsWith(".jpeg") || 
+                                   name.endsWith(".png") || name.endsWith(".gif");
+                        }
+                        
+                        @Override
+                        public String getDescription() {
+                            return "Image files (*.jpg, *.jpeg, *.png, *.gif)";
+                        }
+                    });
+                    
+                    int result = fileChooser.showOpenDialog(dialog);
+                    
+                    if (result == JFileChooser.APPROVE_OPTION) {
+                        File selectedFile = fileChooser.getSelectedFile();
+                        
+                        try {
+                            // Get destination folder (custom folder)
+                            File customFolder = new File(filePath);
+                            if (!customFolder.exists()) {
+                                customFolder.mkdirs();
+                            }
+                            
+                            // Create destination file with original name
+                            File destFile = new File(customFolder, selectedFile.getName());
+                            
+                            // Check if file already exists
+                            if (destFile.exists()) {
+                                int overwrite = JOptionPane.showConfirmDialog(
+                                    dialog,
+                                    "File already exists. Overwrite?",
+                                    "Confirm Overwrite",
+                                    JOptionPane.YES_NO_OPTION
+                                );
+                                
+                                if (overwrite != JOptionPane.YES_OPTION) {
+                                    return;
+                                }
+                            }
+                            
+                            // Copy the file
+                            java.nio.file.Files.copy(
+                                selectedFile.toPath(),
+                                destFile.toPath(),
+                                java.nio.file.StandardCopyOption.REPLACE_EXISTING
+                            );
+                            
+                            // Refresh the image dialog to show the new image
+                            dialog.dispose();
+                            showImages();
+                            
+                        } catch (Exception ex) {
+                            JOptionPane.showMessageDialog(
+                                dialog,
+                                "Error importing image: " + ex.getMessage(),
+                                "Import Error",
+                                JOptionPane.ERROR_MESSAGE
+                            );
+                            ex.printStackTrace();
+                        }
+                    }
+                }
+            });
+            btnPanel.add(importBtn);
+        }
+
         btnPanel.add(cancelBtn);
         panel.add(btnPanel, BorderLayout.SOUTH);
 
@@ -79,46 +181,41 @@ public class ImageButton extends JButton {
             protected Void doInBackground() {
                 File folder = new File(filePath);
                 File[] files = folder.listFiles();
+                
+                // Create panel with grid layout regardless of image type
                 if (files != null) {
-                    int fileCount = files.length;
-
+                    int fileCount = Math.max(1, files.length); // Ensure at least 1 cell for empty custom folder
                     imagesPanel = new JPanel(new GridLayout(Math.ceilDiv(fileCount, 3), 3, 10, 10));
-                    for (File file : files) {
-                        final String imagePath = file.getAbsolutePath();
-                        Image originalImage = new ImageIcon(imagePath).getImage();
-                        Image scaledImage = originalImage.getScaledInstance(132, 132, java.awt.Image.SCALE_SMOOTH);
-                        
-                        // Create a panel to contain the image and add a border on hover
-                        JPanel imageContainer = new JPanel(new BorderLayout());
-                        imageContainer.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-                        
-                        JLabel imageLabel = new JLabel(new ImageIcon(scaledImage));
-                        imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
-                        imageContainer.add(imageLabel, BorderLayout.CENTER);
-                        
-                        // Add mouse listeners for visual feedback, selection, and drag
-                        MouseDragHandler dragHandler = new MouseDragHandler(imageContainer, imagePath, dialog, frame);
-                        imageContainer.addMouseListener(dragHandler);
-                        imageContainer.addMouseMotionListener(dragHandler);
-                        
-                        imagesPanel.add(imageContainer);
+                    
+                    // If files exist, add them to the grid
+                    if (files.length > 0) {
+                        for (File file : files) {
+                            final String imagePath = file.getAbsolutePath();
+                            Image originalImage = new ImageIcon(imagePath).getImage();
+                            Image scaledImage = originalImage.getScaledInstance(132, 132, java.awt.Image.SCALE_SMOOTH);
+                            
+                            // Create a panel to contain the image and add a border on hover
+                            JPanel imageContainer = new JPanel(new BorderLayout());
+                            imageContainer.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+                            
+                            JLabel imageLabel = new JLabel(new ImageIcon(scaledImage));
+                            imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
+                            imageContainer.add(imageLabel, BorderLayout.CENTER);
+                            
+                            // Add mouse listeners for visual feedback, selection, and drag
+                            MouseDragHandler dragHandler = new MouseDragHandler(imageContainer, imagePath, dialog, frame);
+                            imageContainer.addMouseListener(dragHandler);
+                            imageContainer.addMouseMotionListener(dragHandler);
+                            
+                            imagesPanel.add(imageContainer);
+                        }
+                    } 
+                    // Handle empty custom folder case
+                    else if (type == "Custom") {
+                        JLabel emptyFolderLabel = new JLabel("Library is currently empty.");
+                        emptyFolderLabel.setHorizontalAlignment(SwingConstants.CENTER);
+                        imagesPanel.add(emptyFolderLabel);
                     }
-                }
-                if (type == "Custom" && files.length == 0) {
-                    imagesPanel = new JPanel(new BorderLayout());
-                    JLabel emptyFolderLabel = new JLabel("Library is currently empty.");
-                    emptyFolderLabel.setHorizontalAlignment(SwingConstants.CENTER);
-                    imagesPanel.add(emptyFolderLabel, BorderLayout.CENTER);
-                    JButton importBtn = new JButton("Import");
-                    importBtn.addActionListener(new ActionListener() {
-                        public void actionPerformed(ActionEvent e) {
-                            // TODO allow user to actually import image from local directory
-                            System.out.println("Importing image");
-                        };
-                    });
-                    JPanel importBtnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-                    importBtnPanel.add(importBtn);
-                    imagesPanel.add(importBtnPanel, BorderLayout.NORTH);
                 }
                 return null;
             }

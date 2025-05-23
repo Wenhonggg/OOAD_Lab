@@ -34,7 +34,7 @@ public abstract class ImageButton extends JButton {
 
     private void showImages() {
         JDialog dialog = new JDialog(frame, "Insert Image");
-        dialog.setSize(517, 500);
+        dialog.setSize(625, 625);
         dialog.setLocationRelativeTo(frame);
 
         JPanel panel = new JPanel(new BorderLayout());

@@ -75,6 +75,20 @@ public class ImageButton extends JButton {
                     JFileChooser fileChooser = new JFileChooser();
                     fileChooser.setDialogTitle("Import an Image");
                     
+                    // Apply a modern look and feel
+                    try {
+                        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+                        SwingUtilities.updateComponentTreeUI(fileChooser);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                    
+                    // Customize colors
+                    UIManager.put("FileChooser.background", new Color(240, 240, 245));
+                    UIManager.put("FileChooser.foreground", new Color(50, 50, 50));
+                    UIManager.put("FileChooser.selectionBackground", new Color(116, 184, 252));
+                    UIManager.put("FileChooser.selectionForeground", Color.WHITE);
+                    
                     // Set to DETAILS_VIEW explicitly
                     try {
                         // Use the default file view

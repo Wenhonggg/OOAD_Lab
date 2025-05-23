@@ -6,33 +6,18 @@ import java.io.File;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 
-public class ImageButton extends JButton {
-    private JFrame frame;
-    private String type;
-    private String filePath;
+public abstract class ImageButton extends JButton {
+    protected JFrame frame;
+    protected String type;
+    protected String filePath;
 
-    public ImageButton(JFrame f, int type) {
+    public ImageButton(JFrame f, String buttonType) {
         super();
         frame = f;
         
         String projectRoot = System.getProperty("user.dir");
-        
-        switch (type) {
-            case 0:
-                this.type = "Animal";
-                filePath = projectRoot + File.separator + "assets" + File.separator + "animals";
-                break;
-            case 1:
-                this.type = "Flower";
-                filePath = projectRoot + File.separator + "assets" + File.separator + "flowers";
-                break;
-            case 2:
-                this.type = "Custom";
-                filePath = projectRoot + File.separator + "assets" + File.separator + "custom";
-                break;
-            default:
-                break;
-        }
+        this.type = buttonType;
+        this.filePath = projectRoot + "/images/" + type.toLowerCase(); // Initialize filePath
         
         setText(this.type);
         addActionListener(new ActionListener() {
@@ -42,6 +27,10 @@ public class ImageButton extends JButton {
             }
         });
     }
+    
+    protected abstract void performSpecialAction(Object canvas, Object image);
+    protected abstract String getActionHint();
+    protected abstract int getActionKeyModifier();
 
     private void showImages() {
         JDialog dialog = new JDialog(frame, "Insert Image");
@@ -53,7 +42,6 @@ public class ImageButton extends JButton {
         JLabel label = new JLabel("Drag and drop an image to the left canvas! ");
         panel.add(label, BorderLayout.NORTH);
 
-        // placeholder while images are loading
         JLabel loadingLabel = new JLabel("Loading images...", SwingConstants.CENTER);
         panel.add(loadingLabel, BorderLayout.CENTER);
 
@@ -66,8 +54,7 @@ public class ImageButton extends JButton {
             }
         });
 
-        // Add Import button only for Custom image type
-        if (type == "Custom") {
+        if ("Custom".equals(type)) {
             JButton importBtn = new JButton("Import");
             importBtn.addActionListener(new ActionListener() {
                 @Override
@@ -75,7 +62,6 @@ public class ImageButton extends JButton {
                     JFileChooser fileChooser = new JFileChooser();
                     fileChooser.setDialogTitle("Import an Image");
                     
-                    // Apply a modern look and feel
                     try {
                         UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
                         SwingUtilities.updateComponentTreeUI(fileChooser);
@@ -83,32 +69,13 @@ public class ImageButton extends JButton {
                         ex.printStackTrace();
                     }
                     
-                    // Customize colors
                     UIManager.put("FileChooser.background", new Color(240, 240, 245));
                     UIManager.put("FileChooser.foreground", new Color(50, 50, 50));
                     UIManager.put("FileChooser.selectionBackground", new Color(116, 184, 252));
                     UIManager.put("FileChooser.selectionForeground", Color.WHITE);
                     
-                    // Set to DETAILS_VIEW explicitly
-                    try {
-                        // Use the default file view
-                        fileChooser.setFileView(fileChooser.getUI().getFileView(fileChooser));
-                        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-                        
-                        // Set the view type using UIManager
-                        UIManager.put("FileChooser.viewTypeProperty", "detailsView");
-                        
-                        // Optional: For newer Java versions you can try this instead of reflection
-                        fileChooser.putClientProperty("JFileChooser.viewType", "details");
-                    } catch (Exception ex) {
-                        // Fallback if customization fails
-                        System.out.println("Could not set details view: " + ex.getMessage());
-                    }
-                    
-                    // Set preferred size to make it taller than wide
                     fileChooser.setPreferredSize(new Dimension(700, 500));
                     
-                    // Set file filter to only show image files
                     fileChooser.setFileFilter(new javax.swing.filechooser.FileFilter() {
                         @Override
                         public boolean accept(File f) {
@@ -132,16 +99,13 @@ public class ImageButton extends JButton {
                         File selectedFile = fileChooser.getSelectedFile();
                         
                         try {
-                            // Get destination folder (custom folder)
                             File customFolder = new File(filePath);
                             if (!customFolder.exists()) {
                                 customFolder.mkdirs();
                             }
                             
-                            // Create destination file with original name
                             File destFile = new File(customFolder, selectedFile.getName());
                             
-                            // Check if file already exists
                             if (destFile.exists()) {
                                 int overwrite = JOptionPane.showConfirmDialog(
                                     dialog,
@@ -155,14 +119,12 @@ public class ImageButton extends JButton {
                                 }
                             }
                             
-                            // Copy the file
                             java.nio.file.Files.copy(
                                 selectedFile.toPath(),
                                 destFile.toPath(),
                                 java.nio.file.StandardCopyOption.REPLACE_EXISTING
                             );
                             
-                            // Refresh the image dialog to show the new image
                             dialog.dispose();
                             showImages();
                             
@@ -187,7 +149,6 @@ public class ImageButton extends JButton {
         dialog.add(panel);
         dialog.setVisible(true);
 
-        // load images in a background thread
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
             JPanel imagesPanel;
 
@@ -196,39 +157,33 @@ public class ImageButton extends JButton {
                 File folder = new File(filePath);
                 File[] files = folder.listFiles();
                 
-                // Create panel with grid layout regardless of image type
                 if (files != null) {
-                    int fileCount = Math.max(1, files.length); // Ensure at least 1 cell for empty custom folder
+                    int fileCount = Math.max(1, files.length);
                     imagesPanel = new JPanel(new GridLayout(Math.ceilDiv(fileCount, 3), 3, 10, 10));
                     
-                    // If files exist, add them to the grid
                     if (files.length > 0) {
                         for (File file : files) {
-                            final String imagePath = file.getAbsolutePath();
-                            Image originalImage = new ImageIcon(imagePath).getImage();
-                            Image scaledImage = originalImage.getScaledInstance(132, 132, java.awt.Image.SCALE_SMOOTH);
-                            
-                            // Create a panel to contain the image and add a border on hover
-                            JPanel imageContainer = new JPanel(new BorderLayout());
-                            imageContainer.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-                            
-                            JLabel imageLabel = new JLabel(new ImageIcon(scaledImage));
-                            imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
-                            imageContainer.add(imageLabel, BorderLayout.CENTER);
-                            
-                            // Add mouse listeners for visual feedback, selection, and drag
-                            MouseDragHandler dragHandler = new MouseDragHandler(imageContainer, imagePath, dialog, frame);
-                            imageContainer.addMouseListener(dragHandler);
-                            imageContainer.addMouseMotionListener(dragHandler);
-                            
-                            imagesPanel.add(imageContainer);
+                            if (file.isFile()) {
+                                String imagePath = file.getAbsolutePath();
+                                
+                                if (imagePath.toLowerCase().endsWith(".jpg") || 
+                                    imagePath.toLowerCase().endsWith(".jpeg") || 
+                                    imagePath.toLowerCase().endsWith(".png") || 
+                                    imagePath.toLowerCase().endsWith(".gif")) {
+                                    
+                                    JPanel imageContainer = createImageContainer(imagePath);
+                                    MouseDragHandler handler = new MouseDragHandler(imageContainer, imagePath, dialog, frame);
+                                    imageContainer.addMouseListener(handler);
+                                    imageContainer.addMouseMotionListener(handler); // Add motion listener
+                                    imagesPanel.add(imageContainer);
+                                }
+                            }
                         }
                     } 
-                    // Handle empty custom folder case
-                    else if (type == "Custom") {
-                        JLabel emptyFolderLabel = new JLabel("Library is currently empty.");
-                        emptyFolderLabel.setHorizontalAlignment(SwingConstants.CENTER);
-                        imagesPanel.add(emptyFolderLabel);
+                    else if ("Custom".equals(type)) {
+                        JLabel emptyLabel = new JLabel("No custom images. Import some!", SwingConstants.CENTER);
+                        emptyLabel.setPreferredSize(new Dimension(150, 150));
+                        imagesPanel.add(emptyLabel);
                     }
                 }
                 return null;
@@ -241,7 +196,6 @@ public class ImageButton extends JButton {
                     JScrollPane scrollPane = new JScrollPane(imagesPanel);
                     scrollPane.setBorder(new EmptyBorder(20, 0, 0, 0));
                     
-                    // Increase scrolling speed
                     scrollPane.getVerticalScrollBar().setUnitIncrement(16);
                     scrollPane.getVerticalScrollBar().setBlockIncrement(128);
                     scrollPane.getHorizontalScrollBar().setUnitIncrement(16);
@@ -259,8 +213,27 @@ public class ImageButton extends JButton {
         worker.execute();
     }
     
-    // New inner class to handle both click and drag-and-drop functionality
-    private class MouseDragHandler extends java.awt.event.MouseAdapter {
+    protected JPanel createImageContainer(String imagePath) {
+        JPanel container = new JPanel(new BorderLayout());
+        container.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        
+        ImageIcon originalIcon = new ImageIcon(imagePath);
+        Image scaledImage = originalIcon.getImage().getScaledInstance(150, 150, Image.SCALE_SMOOTH);
+        JLabel imageLabel = new JLabel(new ImageIcon(scaledImage));
+        
+        container.add(imageLabel, BorderLayout.CENTER);
+        
+        String fileName = new File(imagePath).getName();
+        if (fileName.length() > 15) {
+            fileName = fileName.substring(0, 12) + "...";
+        }
+        JLabel nameLabel = new JLabel(fileName, SwingConstants.CENTER);
+        container.add(nameLabel, BorderLayout.SOUTH);
+        
+        return container;
+    }
+    
+    protected class MouseDragHandler extends java.awt.event.MouseAdapter {
         private JPanel imageContainer;
         private String imagePath;
         private JDialog dialog;
@@ -278,7 +251,6 @@ public class ImageButton extends JButton {
         
         @Override
         public void mouseEntered(MouseEvent evt) {
-            // Change border on hover to highlight selection
             imageContainer.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(0, 123, 255), 3),
                 BorderFactory.createEmptyBorder(2, 2, 2, 2)
@@ -290,7 +262,6 @@ public class ImageButton extends JButton {
         
         @Override
         public void mouseExited(MouseEvent evt) {
-            // Only remove border if not dragging
             if (!isDragging) {
                 imageContainer.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
                 imageContainer.revalidate();
@@ -300,14 +271,12 @@ public class ImageButton extends JButton {
         
         @Override
         public void mouseClicked(MouseEvent evt) {
-            // Keep original click-to-add behavior
             findAndAddImageToLeftCanvas(imagePath);
             dialog.dispose();
         }
         
         @Override
         public void mousePressed(MouseEvent evt) {
-            // Store drag start position and show clicking effect
             dragStart = evt.getPoint();
             imageContainer.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(0, 86, 179), 3),
@@ -317,7 +286,6 @@ public class ImageButton extends JButton {
         
         @Override
         public void mouseReleased(MouseEvent evt) {
-            // Handle drag end and drop
             if (isDragging) {
                 isDragging = false;
                 if (dragImage != null) {
@@ -325,10 +293,7 @@ public class ImageButton extends JButton {
                     dragImage = null;
                 }
                 
-                // Get screen position
                 Point screenPos = evt.getLocationOnScreen();
-                
-                // Find if we're over the left canvas
                 LeftCanvas leftCanvas = findLeftCanvas();
                 if (leftCanvas != null) {
                     Point canvasPos = leftCanvas.getLocationOnScreen();
@@ -339,12 +304,10 @@ public class ImageButton extends JButton {
                         leftCanvas.getHeight()
                     );
                     
-                    // If dropped on the canvas
                     if (canvasBounds.contains(screenPos)) {
-                        // Add the image to the canvas at specific position
                         Point relativePos = new Point(
-                            screenPos.x - canvasPos.x - 75, // Center image horizontally (150/2)
-                            screenPos.y - canvasPos.y - 75  // Center image vertically (150/2)
+                            screenPos.x - canvasPos.x - 75,
+                            screenPos.y - canvasPos.y - 75
                         );
                         
                         addImageToCanvasAt(leftCanvas, imagePath, relativePos);
@@ -353,7 +316,6 @@ public class ImageButton extends JButton {
                 }
             }
             
-            // Reset border to hover state
             imageContainer.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(0, 123, 255), 3),
                 BorderFactory.createEmptyBorder(2, 2, 2, 2)
@@ -363,17 +325,14 @@ public class ImageButton extends JButton {
         @Override
         public void mouseDragged(MouseEvent evt) {
             if (dragStart != null) {
-                // Start dragging after moving a bit
                 int dragThreshold = 5;
                 Point currentPoint = evt.getPoint();
                 if (!isDragging && 
                     (Math.abs(currentPoint.x - dragStart.x) > dragThreshold || 
                      Math.abs(currentPoint.y - dragStart.y) > dragThreshold)) {
                     
-                    // Begin drag operation
                     isDragging = true;
                     
-                    // Create a drag image
                     if (dragImage == null) {
                         dragImage = new JWindow();
                         JLabel dragLabel = new JLabel();
@@ -388,7 +347,6 @@ public class ImageButton extends JButton {
                     }
                 }
                 
-                // Update drag image position if dragging
                 if (isDragging && dragImage != null) {
                     Point screenLoc = evt.getLocationOnScreen();
                     dragImage.setLocation(
@@ -400,8 +358,7 @@ public class ImageButton extends JButton {
             }
         }
         
-        // Helper methods
-        private LeftCanvas findLeftCanvas() {
+        protected LeftCanvas findLeftCanvas() {
             Component[] components = mainFrame.getContentPane().getComponents();
             for (Component component : components) {
                 if (component instanceof JPanel) {
@@ -418,17 +375,16 @@ public class ImageButton extends JButton {
             return null;
         }
         
-        private void findAndAddImageToLeftCanvas(String path) {
+        protected void findAndAddImageToLeftCanvas(String path) {
             LeftCanvas leftCanvas = findLeftCanvas();
             if (leftCanvas != null) {
-                leftCanvas.addImage(path);
+                leftCanvas.addImage(path, type);
             }
         }
         
-        private void addImageToCanvasAt(LeftCanvas canvas, String path, Point position) {
-            // We need to add this method to LeftCanvas
+        protected void addImageToCanvasAt(LeftCanvas canvas, String path, Point position) {
             if (canvas != null) {
-                canvas.addImageAt(path, position.x, position.y);
+                canvas.addImageAt(path, position.x, position.y, type);
             }
         }
     }

@@ -1,4 +1,3 @@
-
 import java.awt.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -13,8 +12,12 @@ public class Toolbar extends JToolBar {
         parent = f;
         add(new NewButton(this));
         add(new SaveButton(parent));
-        for (int i = 0; i < 3; i++)
-            add(new ImageButton(parent, i));
+        
+        // Replace the for loop with explicit creation of each subclass
+        add(new AnimalImageButton(parent));
+        add(new FlowerImageButton(parent));
+        add(new CustomImageButton(parent));
+        
         DrawingToolPanel dtp = new DrawingToolPanel(parent);
         add(dtp);
 
@@ -46,5 +49,4 @@ public class Toolbar extends JToolBar {
                 return "SOUTH";
         }
     }
-
 }

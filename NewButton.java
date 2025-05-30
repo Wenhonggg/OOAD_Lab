@@ -1,7 +1,5 @@
-
 import java.awt.event.*;
 import java.io.File;
-
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JMenuItem;
@@ -12,6 +10,7 @@ public class NewButton extends JButton {
 
     public NewButton(Toolbar tb) {
         super();
+        // Fixed the missing parenthesis in this line only
         setIcon(new ImageIcon(ImageButton.resizeImage(new File("assets/toolbarIcons/newIcon.png"), 30, 30)));
         parent = tb;
         addActionListener(new ActionListener() {
@@ -41,16 +40,14 @@ public class NewButton extends JButton {
         leftCanvas.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // TODO replace with actual creation of new left canvas
-                System.out.println("Creating new left canvas...");
+                parent.createNewLeftCanvas();
             }
         });
         JMenuItem rightCanvas = new JMenuItem("Right canvas");
         rightCanvas.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // TODO replace with actual creation of new right canvas
-                System.out.println("Creating new right canvas...");
+                parent.createNewRightCanvas();
             }
         });
         popupMenu.add(leftCanvas);

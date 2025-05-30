@@ -1,4 +1,3 @@
-
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -32,6 +31,11 @@ public class DrawingToolPanel extends JPanel {
     private JLabel sizeLabel;
     private JPanel jccPanel;
     private List<Color> savedColours;
+    
+    // State variables for drawing tools
+    private boolean isEraser = false;
+    private Color currentColor = Color.BLACK;
+    private int currentSize = 10;
 
     public DrawingToolPanel(JFrame f) {
         super();
@@ -56,6 +60,7 @@ public class DrawingToolPanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 System.out.println("Brush selected");
+                isEraser = false;
             }
         });
 
@@ -67,14 +72,14 @@ public class DrawingToolPanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 System.out.println("Eraser selected");
+                isEraser = true;
             }
         });
 
         // create slider to adjust pen/eraser size
         sliderPanel = new JPanel();
         sliderPanel.setOpaque(false);
-        // TODO replace 10 with current brush/eraser size
-        sizeSlider = new JSlider(0, 100, 10);
+        sizeSlider = new JSlider(1, 100, currentSize);
         sizeSlider.setOrientation(JSlider.HORIZONTAL);
         sizeSlider.setUI(createHorizontalSlider(sizeSlider));
         sizeSlider.setPreferredSize(new Dimension(HORIZONTAL_SLIDER_WIDTH, HORIZONTAL_SLIDER_HEIGHT));
@@ -82,14 +87,15 @@ public class DrawingToolPanel extends JPanel {
 
         sizeLabel = new JLabel(String.valueOf(sizeSlider.getValue()));
         sizeLabel.setPreferredSize(new Dimension(20, 20));
-        // automatically update label
+        // automatically update label and current size
         sizeSlider.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
-                sizeLabel.setText(String.valueOf(sizeSlider.getValue()));
-                // TODO update brush/eraser size
-                if (!sizeSlider.getValueIsAdjusting())
-                    System.out.println("Brush/Eraser size changed to " + sizeSlider.getValue());
+                currentSize = sizeSlider.getValue();
+                sizeLabel.setText(String.valueOf(currentSize));
+                if (!sizeSlider.getValueIsAdjusting()) {
+                    System.out.println("Brush/Eraser size changed to " + currentSize);
+                }
                 repaint();
             }
         });
@@ -105,6 +111,18 @@ public class DrawingToolPanel extends JPanel {
         add(eraser);
         add(sliderPanel);
         add(jccPanel);
+    }
+
+    public boolean isEraser() {
+        return isEraser;
+    }
+
+    public Color getCurrentColor() {
+        return currentColor;
+    }
+
+    public int getCurrentSize() {
+        return currentSize;
     }
 
     public void updateOrientation(int tbOrientation) {
@@ -252,7 +270,7 @@ public class DrawingToolPanel extends JPanel {
         final int DIAMETER = 24;
         JButton btn = new JButton();
         btn.setPreferredSize(new Dimension(DIAMETER, DIAMETER));
-        btn.setContentAreaFilled(false); // disable default rectangular background
+        btn.setContentAreaFilled(false);
         btn.setFocusPainted(false);
         btn.setBorderPainted(false);
         btn.setUI(new BasicButtonUI() {
@@ -264,12 +282,12 @@ public class DrawingToolPanel extends JPanel {
                 g2.fillOval(0, 0, DIAMETER, DIAMETER);
                 g2.dispose();
             }
-
         });
         btn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // TODO actually change the brush colour
+                currentColor = color;
+                isEraser = false;
                 System.out.println(color + " chosen");
             }
         });
@@ -280,7 +298,7 @@ public class DrawingToolPanel extends JPanel {
         final int DIAMETER = 24;
         JButton btn = new JButton();
         btn.setPreferredSize(new Dimension(DIAMETER, DIAMETER));
-        btn.setContentAreaFilled(false); // disable default rectangular background
+        btn.setContentAreaFilled(false);
         btn.setFocusPainted(false);
         btn.setBorderPainted(false);
         btn.setUI(new BasicButtonUI() {
@@ -299,14 +317,16 @@ public class DrawingToolPanel extends JPanel {
                 g2.fillOval(0, 0, DIAMETER, DIAMETER);
                 g2.dispose();
             }
-
         });
         btn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // TODO actually change the brush colour
-                Color selectedColor = JColorChooser.showDialog(frame, "Change brush colour", Color.BLACK);
-                System.out.println(selectedColor + " chosen");
+                Color selectedColor = JColorChooser.showDialog(frame, "Change brush colour", currentColor);
+                if (selectedColor != null) {
+                    currentColor = selectedColor;
+                    isEraser = false;
+                    System.out.println(selectedColor + " chosen");
+                }
             }
         });
         return btn;
@@ -328,7 +348,6 @@ public class DrawingToolPanel extends JPanel {
                 panel.add(Box.createRigidArea(new Dimension(0, 5)));
             else
                 panel.add(Box.createRigidArea(new Dimension(5, 0)));
-
         }
 
         JButton customColourBtn = createCustomColourBtn();

@@ -1,0 +1,11 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "MainFrame",
+            "request": "launch",
+            "mainClass": "MainFrame",
+            "projectName": "OOAD_Lab-1_c1475bf0"
+        }
+    ]
+}

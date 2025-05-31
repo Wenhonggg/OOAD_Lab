@@ -1,14 +1,14 @@
-
 import javax.swing.*;
-
 import java.awt.BorderLayout;
 import java.awt.event.*;
+import java.io.File;
 
 public class SaveButton extends JButton {
     JFrame frame;
 
     public SaveButton(JFrame f) {
-        super("Save");
+        super();
+        setIcon(new ImageIcon(ImageButton.resizeImage(new File("assets/toolbarIcons/saveIcon.png"), 30, 30)));
         frame = f;
         addActionListener(new ActionListener() {
             @Override

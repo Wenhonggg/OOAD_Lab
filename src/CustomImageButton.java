@@ -1,11 +1,14 @@
 import java.awt.event.InputEvent;
 import java.io.File;
+
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 
 public class CustomImageButton extends ImageButton {
     
     public CustomImageButton(JFrame f) {
         super(f, "Custom");
+        setIcon(new ImageIcon(ImageButton.resizeImage(new File("assets/toolbarIcons/customIcon.png"), 30, 30)));
         String projectRoot = System.getProperty("user.dir");
         filePath = projectRoot + File.separator + "assets" + File.separator + "custom";
     }

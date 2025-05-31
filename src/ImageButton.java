@@ -14,12 +14,10 @@ public abstract class ImageButton extends JButton {
     public ImageButton(JFrame f, String buttonType) {
         super();
         frame = f;
-        
-        String projectRoot = System.getProperty("user.dir");
         this.type = buttonType;
-        this.filePath = projectRoot + "/images/" + type.toLowerCase(); // Initialize filePath
+
         
-        setText(this.type);
+        setText("");
         addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -387,5 +385,11 @@ public abstract class ImageButton extends JButton {
                 canvas.addImageAt(path, position.x, position.y, type);
             }
         }
+    }
+
+    public static Image resizeImage(File file, int w, int h) {
+        Image originalImage = new ImageIcon(file.getAbsolutePath()).getImage();
+        Image scaledImage = originalImage.getScaledInstance(w, h, java.awt.Image.SCALE_SMOOTH);
+        return scaledImage;
     }
 }

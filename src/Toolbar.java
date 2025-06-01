@@ -19,8 +19,11 @@ public class Toolbar extends JToolBar {
     private void initializeComponents() {
         add(new NewButton(this));
         add(new SaveButton(parent));
-        for (int i = 0; i < 3; i++)
-            add(new ImageButton(parent, i));
+        
+        // Factory method approach
+        for (int i = 0; i < 3; i++) {
+            add(createImageButton(i));
+        }
         
         DrawingToolPanel dtp = new DrawingToolPanel(parent);
         add(dtp);
@@ -32,6 +35,19 @@ public class Toolbar extends JToolBar {
                 dtp.updateOrientation(newOrientation);
             }
         });
+    }
+
+    private ImageButton createImageButton(int type) {
+        switch (type) {
+            case 0:
+                return new AnimalImageButton(parent);
+            case 1:
+                return new FlowerImageButton(parent);
+            case 2:
+                return new CustomImageButton(parent);
+            default:
+                throw new IllegalArgumentException("Invalid image button type: " + type);
+        }
     }
 
     private void setupLayout() {

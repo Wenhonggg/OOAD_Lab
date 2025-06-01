@@ -1,4 +1,3 @@
-
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -6,33 +5,15 @@ import java.io.File;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 
-public class ImageButton extends JButton {
-    private JFrame frame;
-    private String type;
-    private String filePath;
+public abstract class ImageButton extends JButton {
+    protected JFrame frame;
+    protected String type;
+    protected String filePath;
 
-    public ImageButton(JFrame f, int type) {
+    public ImageButton(JFrame f) {
         super();
         frame = f;
-        switch (type) {
-            case 0:
-                this.type = "Animal";
-                filePath = "assets/animals";
-                setIcon(new ImageIcon(resizeImage(new File("assets/toolbarIcons/animalIcon.png"), 30, 30)));
-                break;
-            case 1:
-                this.type = "Flower";
-                filePath = "assets/flowers";
-                setIcon(new ImageIcon(resizeImage(new File("assets/toolbarIcons/flowerIcon.png"), 30, 30)));
-                break;
-            case 2:
-                this.type = "Custom";
-                filePath = "assets/custom";
-                setIcon(new ImageIcon(resizeImage(new File("assets/toolbarIcons/customIcon.png"), 30, 30)));
-                break;
-            default:
-                break;
-        }
+        initialize();
         addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -40,8 +21,11 @@ public class ImageButton extends JButton {
             }
         });
     }
+    
+    // Abstract method that subclasses must implement
+    protected abstract void initialize();
 
-    private void showImages() {
+    protected void showImages() {
         JDialog dialog = new JDialog(frame, "Insert Image");
         dialog.setSize(500, 500);
         dialog.setLocationRelativeTo(frame);
@@ -89,7 +73,7 @@ public class ImageButton extends JButton {
                         imagesPanel.add(imageLabel);
                     }
                 }
-                if (type == "Custom" && files.length == 0) {
+                if (type == "Custom" && files != null && files.length == 0) {
                     imagesPanel = new JPanel(new BorderLayout());
                     JLabel emptyFolderLabel = new JLabel("Library is currently empty.");
                     emptyFolderLabel.setHorizontalAlignment(SwingConstants.CENTER);

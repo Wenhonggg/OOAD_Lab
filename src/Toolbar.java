@@ -1,7 +1,6 @@
 import java.awt.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-
 import javax.swing.*;
 
 public class Toolbar extends JToolBar {
@@ -10,13 +9,18 @@ public class Toolbar extends JToolBar {
     public Toolbar(JFrame f) {
         super();
         parent = f;
+        initializeComponents();
+        setupLayout();
+    }
+
+    private void initializeComponents() {
         add(new NewButton(this));
         add(new SaveButton(parent));
         
-        // Replace the for loop with explicit creation of each subclass
-        add(new AnimalImageButton(parent));
-        add(new FlowerImageButton(parent));
-        add(new CustomImageButton(parent));
+        // Factory method approach
+        for (int i = 0; i < 3; i++) {
+            add(createImageButton(i));
+        }
         
         DrawingToolPanel dtp = new DrawingToolPanel(parent);
         add(dtp);
@@ -28,9 +32,24 @@ public class Toolbar extends JToolBar {
                 dtp.updateOrientation(newOrientation);
             }
         });
-
+    }
+    
+    private void setupLayout() {
         setFloatable(true);
         setRollover(true);
+    }
+
+    private ImageButton createImageButton(int type) {
+        switch (type) {
+            case 0:
+                return new AnimalImageButton(parent);
+            case 1:
+                return new FlowerImageButton(parent);
+            case 2:
+                return new CustomImageButton(parent);
+            default:
+                throw new IllegalArgumentException("Invalid image button type: " + type);
+        }
     }
 
     protected String getToolbarPosition() {

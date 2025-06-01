@@ -1,13 +1,28 @@
 import java.awt.event.InputEvent;
 import java.io.File;
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 
 public class AnimalImageButton extends ImageButton {
     
-    public AnimalImageButton(JFrame f) {
-        super(f, "Animal");
+    public AnimalImageButton(JFrame frame) {
+        super(frame);
+    }
+    
+    @Override
+    protected void initialize() {
+        this.type = "Animal";
         String projectRoot = System.getProperty("user.dir");
-        filePath = projectRoot + File.separator + "assets" + File.separator + "animals";
+        this.filePath = projectRoot + File.separator + "assets" + File.separator + "animals";
+        
+        File iconFile = new File(projectRoot + File.separator + "assets" + File.separator + 
+                               "toolbarIcons" + File.separator + "animalIcon.png");
+        
+        if (iconFile.exists()) {
+            setIcon(new ImageIcon(resizeImage(iconFile, 30, 30)));
+        } else {
+            setText("Animal");
+        }
     }
     
     @Override

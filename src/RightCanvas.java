@@ -14,6 +14,10 @@ class RightCanvas extends CanvasPanel {
         setupDrawing();
     }
 
+    public void setToolPanel(DrawingToolPanel toolPanel) {
+        this.toolPanel = toolPanel;
+    }
+
     private void setupDrawing() {
         addMouseListener(new MouseAdapter() {
             @Override

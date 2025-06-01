@@ -7,13 +7,13 @@ public class Toolbar extends JToolBar {
     private JFrame parent;
     private LeftCanvas leftCanvas;
     private RightCanvas rightCanvas;
-    private JSplitPane splitPane;
 
-    public Toolbar(JFrame f) {
+    public Toolbar(JFrame f, LeftCanvas leftCanvas, RightCanvas rightCanvas) {
         super();
         parent = f;
+        this.leftCanvas = leftCanvas;
+        this.rightCanvas = rightCanvas;
         initializeComponents();
-        setupLayout();
     }
 
     private void initializeComponents() {
@@ -36,7 +36,7 @@ public class Toolbar extends JToolBar {
             }
         });
     }
-
+    
     private ImageButton createImageButton(int type) {
         switch (type) {
             case 0:
@@ -50,36 +50,37 @@ public class Toolbar extends JToolBar {
         }
     }
 
-    private void setupLayout() {
-        setFloatable(true);
-        setRollover(true);
-        createDefaultCanvases();
-    }
-
-    private void createDefaultCanvases() {
-        leftCanvas = new LeftCanvas(650, 730);
-        DrawingToolPanel dtp = getDrawingToolPanel();
-        rightCanvas = new RightCanvas(dtp);
-        splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftCanvas, rightCanvas);
-        splitPane.setResizeWeight(0.5);
-        parent.add(splitPane, BorderLayout.CENTER);
-    }
-
     public void createNewLeftCanvas() {
-        leftCanvas = new LeftCanvas(650, 730);
-        splitPane.setLeftComponent(leftCanvas);
-        splitPane.setDividerLocation(0.5);
-        parent.revalidate();
+        // Find the container holding the left canvas
+        Container parent = leftCanvas.getParent();
+        if (parent != null) {
+            // Create new canvas
+            leftCanvas = new LeftCanvas(650, 730);
+            
+            // Update the reference in MainFrame too
+            if (this.parent instanceof MainFrame) {
+                ((MainFrame) this.parent).setLeftCanvas(leftCanvas);
+            }
+            
+            // Replace in container
+            parent.removeAll();
+            parent.add(leftCanvas);
+            parent.revalidate();
+            parent.repaint();
+        }
     }
 
     public void createNewRightCanvas() {
-        DrawingToolPanel dtp = getDrawingToolPanel();
-        rightCanvas = new RightCanvas(dtp);
-        rightCanvas.clearCanvas();
-        splitPane.setRightComponent(rightCanvas);
-        splitPane.setDividerLocation(0.5);
-        parent.revalidate();
-        parent.repaint();
+        // Find the container holding the right canvas
+        Container parent = rightCanvas.getParent();
+        if (parent != null) {
+            DrawingToolPanel dtp = getDrawingToolPanel();
+            rightCanvas = new RightCanvas(dtp);
+            parent.removeAll();
+            parent.add(rightCanvas);
+            parent.revalidate();
+            parent.repaint();
+        }
     }
 
     public RightCanvas getRightCanvas() {

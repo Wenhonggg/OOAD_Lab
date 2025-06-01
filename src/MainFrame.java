@@ -4,6 +4,7 @@ import javax.swing.*;
 public class MainFrame extends JFrame {
     private int canvasWidth = 650;
     private int canvasHeight = 730;
+    private LeftCanvas leftCanvas; // Add this field
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new MainFrame().setVisible(true));
@@ -59,7 +60,7 @@ public class MainFrame extends JFrame {
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.X_AXIS));
         mainPanel.setBackground(Color.GRAY);
 
-        LeftCanvas leftCanvas = new LeftCanvas(canvasWidth, canvasHeight);
+        leftCanvas = new LeftCanvas(canvasWidth, canvasHeight); // Store reference
         DrawingToolPanel dtp = new DrawingToolPanel(this);
         RightCanvas rightCanvas = new RightCanvas(dtp);
 
@@ -90,7 +91,19 @@ public class MainFrame extends JFrame {
         add(mainPanel);
         
         // Add toolbar after canvases are created
-        Toolbar tb = new Toolbar(this);
+        Toolbar tb = new Toolbar(this, leftCanvas, rightCanvas); // Pass canvases to toolbar
         add(tb, BorderLayout.NORTH);
+
+        tb.createNewRightCanvas();
+    }
+    
+    // Add getter method
+    public LeftCanvas getLeftCanvas() {
+        return leftCanvas;
+    }
+
+    // Add this method to update the reference
+    public void setLeftCanvas(LeftCanvas newCanvas) {
+        this.leftCanvas = newCanvas;
     }
 }

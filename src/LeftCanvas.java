@@ -415,22 +415,26 @@ class LeftCanvas extends CanvasPanel {
         
         // Draw all hover hints in screen space
         for (HintInfo hintInfo : hoverHints) {
-            FontMetrics fm = g2d.getFontMetrics();
+            // Use larger, bold font for better visibility
+            Font hintFont = new Font("Arial", Font.BOLD, 14);
+            g2d.setFont(hintFont);
+            FontMetrics fm = g2d.getFontMetrics(hintFont);
             int textWidth = fm.stringWidth(hintInfo.text);
-            int padding = 10;
+            int padding = 12;
             
-            g2d.setColor(new Color(0, 0, 0, 180)); // Semi-transparent black
+            // Darker background with higher opacity for better contrast
+            g2d.setColor(new Color(0, 0, 0, 220)); // More opaque black
             g2d.fillRoundRect(
                 hintInfo.x - textWidth/2 - padding, 
                 hintInfo.y - fm.getHeight() + 5, 
                 textWidth + 2*padding, 
-                fm.getHeight() + 10, 
-                10, 
-                10
+                fm.getHeight() + 12, // Slightly larger height
+                12, // Rounder corners
+                12
             );
             
+            // Brighter white text
             g2d.setColor(Color.WHITE);
-            g2d.setFont(new Font("Arial", Font.PLAIN, 12));
             g2d.drawString(
                 hintInfo.text, 
                 hintInfo.x - textWidth/2, 
@@ -438,28 +442,32 @@ class LeftCanvas extends CanvasPanel {
             );
         }
         
-        // If canvas is rotated, add a hint text
-        if (canvasRotation != 0) {
-            String rotationHint = "Canvas is rotated";
-            
-            g2d.setColor(new Color(0, 0, 0, 180));
-            
-            FontMetrics fm = g2d.getFontMetrics();
-            int textWidth1 = fm.stringWidth(rotationHint);
-            int padding = 5;
-            
-            g2d.fillRoundRect(
-                10, 
-                10, 
-                textWidth1 + 2*padding, 
-                fm.getHeight() + padding*2, 
-                5, 
-                5
-            );
-            
-            g2d.setColor(Color.WHITE);
-            g2d.drawString(rotationHint, 10 + padding, 10 + fm.getAscent() + padding/2);
-        }
+        // Always show rotation hint with larger text
+        String rotationHint = canvasRotation != 0 ? "Canvas is rotated" : "Hold CTRL to rotate canvas and images";
+        
+        // Create larger, bold font for better visibility
+        Font rotationFont = new Font("Arial", Font.BOLD, 16);
+        g2d.setFont(rotationFont);
+        FontMetrics fm = g2d.getFontMetrics(rotationFont);
+        int textWidth1 = fm.stringWidth(rotationHint);
+        int padding = 8;
+        
+        // Better contrast background with higher opacity
+        g2d.setColor(new Color(0, 0, 0, 220));
+        g2d.fillRoundRect(
+            10, 
+            10, 
+            textWidth1 + 2*padding, 
+            fm.getHeight() + padding*2, 
+            10, 
+            10
+        );
+        
+        // Draw text with a subtle drop shadow for even better readability
+        g2d.setColor(new Color(0, 0, 0, 100));
+        g2d.drawString(rotationHint, 11 + padding, 11 + fm.getAscent() + padding/2);
+        g2d.setColor(Color.WHITE);
+        g2d.drawString(rotationHint, 10 + padding, 10 + fm.getAscent() + padding/2);
         
         g2d.dispose();
     }

@@ -14,6 +14,11 @@ class LeftCanvas extends CanvasPanel {
     private boolean isRotating = false;
     private boolean isPerformingSpecialAction = false;
     
+    // Add canvas rotation variables
+    private double canvasRotation = 0;
+    private boolean isRotatingCanvas = false;
+    private Point canvasRotationCenter;
+    
     public LeftCanvas(int width, int height) {
         super(width, height);
         setupMouseListeners();
@@ -23,17 +28,21 @@ class LeftCanvas extends CanvasPanel {
         addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                selectImageAt(e.getX(), e.getY());
                 lastMousePosition = e.getPoint();
                 
-                if (selectedImage != null) {
-                    // Check for rotation (original functionality)
+                // Determine if clicking on an image or empty space
+                CanvasImage clickedImage = getImageAt(e.getX(), e.getY());
+                
+                if (clickedImage != null) {
+                    // Clicked on an image
+                    selectedImage = clickedImage;
+                    
                     if (e.isControlDown() && !e.isShiftDown() && !e.isAltDown()) {
                         isRotating = true;
                         isPerformingSpecialAction = false;
+                        isRotatingCanvas = false;
                         setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
                     } 
-                    // Check for special actions based on image type
                     else if (selectedImage.getSourceType() != null) {
                         int modifiers = e.getModifiersEx();
                         
@@ -42,6 +51,7 @@ class LeftCanvas extends CanvasPanel {
                             (modifiers & InputEvent.SHIFT_DOWN_MASK) != 0) {
                             isPerformingSpecialAction = true;
                             isRotating = false;
+                            isRotatingCanvas = false;
                             selectedImage.flip(true); // Flip horizontally
                             repaint();
                         }
@@ -50,6 +60,7 @@ class LeftCanvas extends CanvasPanel {
                                 (modifiers & InputEvent.ALT_DOWN_MASK) != 0) {
                             isPerformingSpecialAction = true;
                             isRotating = false;
+                            isRotatingCanvas = false;
                             // Initial scale will be done in mouseDragged
                         }
                         // Custom - CTRL+SHIFT
@@ -58,9 +69,25 @@ class LeftCanvas extends CanvasPanel {
                                 == (InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK)) {
                             isPerformingSpecialAction = true;
                             isRotating = false;
+                            isRotatingCanvas = false;
                             setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
                         }
                     }
+                } 
+                else {
+                    // Clicked on empty space - check for canvas rotation
+                    if (e.isControlDown()) {
+                        isRotatingCanvas = true;
+                        isRotating = false;
+                        isPerformingSpecialAction = false;
+                        setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
+                        // Use center of canvas as rotation point
+                        canvasRotationCenter = new Point(getWidth()/2, getHeight()/2);
+                    } else {
+                        // Just deselect
+                        selectedImage = null;
+                    }
+                    repaint();
                 }
             }
             
@@ -68,6 +95,7 @@ class LeftCanvas extends CanvasPanel {
             public void mouseReleased(MouseEvent e) {
                 isRotating = false;
                 isPerformingSpecialAction = false;
+                isRotatingCanvas = false;
                 setCursor(Cursor.getDefaultCursor());
                 lastMousePosition = null;
                 repaint();
@@ -75,7 +103,7 @@ class LeftCanvas extends CanvasPanel {
             
             @Override
             public void mouseClicked(MouseEvent e) {
-                if (!isRotating && !isPerformingSpecialAction) {
+                if (!isRotating && !isPerformingSpecialAction && !isRotatingCanvas) {
                     selectImageAt(e.getX(), e.getY());
                 }
                 
@@ -100,13 +128,7 @@ class LeftCanvas extends CanvasPanel {
             public void mouseMoved(MouseEvent e) {
                 // Check if mouse is over any image
                 CanvasImage previousHover = hoveredImage;
-                hoveredImage = null;
-                for (CanvasImage image : images) {
-                    if (image.containsPoint(e.getX(), e.getY())) {
-                        hoveredImage = image;
-                        break;
-                    }
-                }
+                hoveredImage = getImageAt(e.getX(), e.getY());
                 
                 if (hoveredImage != previousHover) {
                     repaint();
@@ -115,16 +137,13 @@ class LeftCanvas extends CanvasPanel {
             
             @Override
             public void mouseDragged(MouseEvent e) {
-                if (selectedImage == null || lastMousePosition == null) {
+                if (lastMousePosition == null) {
                     return;
                 }
                 
-                if (isRotating) {
-                    // Original rotation code
-                    Point center = new Point(
-                        selectedImage.getX() + selectedImage.getWidth()/2,
-                        selectedImage.getY() + selectedImage.getHeight()/2
-                    );
+                if (isRotatingCanvas) {
+                    // Canvas rotation logic
+                    Point center = canvasRotationCenter;
                     
                     double angle1 = Math.atan2(
                         lastMousePosition.y - center.y,
@@ -135,28 +154,79 @@ class LeftCanvas extends CanvasPanel {
                         e.getX() - center.x
                     );
                     
+                    double deltaRotation = angle2 - angle1;
+                    canvasRotation += deltaRotation;
+                    
+                    lastMousePosition = e.getPoint();
+                    repaint();
+                }
+                else if (isRotating && selectedImage != null) {
+                    // Rotation code for individual image - account for canvas rotation
+                    Point center = new Point(
+                        selectedImage.getX() + selectedImage.getWidth()/2,
+                        selectedImage.getY() + selectedImage.getHeight()/2
+                    );
+                    
+                    // Get points in canvas space
+                    Point p1 = transformPoint(lastMousePosition.x, lastMousePosition.y);
+                    Point p2 = transformPoint(e.getX(), e.getY());
+                    
+                    double angle1 = Math.atan2(
+                        p1.y - center.y,
+                        p1.x - center.x
+                    );
+                    double angle2 = Math.atan2(
+                        p2.y - center.y,
+                        p2.x - center.x
+                    );
+                    
                     double rotation = angle2 - angle1;
                     selectedImage.rotate(rotation);
                     
                     lastMousePosition = e.getPoint();
                     repaint();
                 }
-                else if (isPerformingSpecialAction) {
+                else if (isPerformingSpecialAction && selectedImage != null) {
                     if (selectedImage.getSourceType().equals("Flower")) {
-                        // Scaling for Flower images
-                        int deltaY = e.getY() - lastMousePosition.y;
-                        float scaleFactor = 1.0f;
+                        // Get the raw mouse movement in screen space
+                        int rawDeltaY = e.getY() - lastMousePosition.y;  // Positive means moving down
                         
-                        // Scale down when moving mouse up, scale up when moving down
-                        if (deltaY != 0) {
-                            scaleFactor = 1.0f + (deltaY * 0.01f);
+                        // Transform the vertical movement to account for canvas rotation
+                        // We need the standard up/down direction in user's perspective
+                        double adjustedDelta;
+                        
+                        if (canvasRotation == 0) {
+                            // No rotation, use raw delta directly
+                            adjustedDelta = rawDeltaY;
+                        } else {
+                            // With rotation, we need to project the movement onto the "true" vertical axis
+                            // in the user's perspective (not the canvas perspective)
+                            double cos = Math.cos(-canvasRotation);  // Negative rotation to convert back to screen space
+                            double sin = Math.sin(-canvasRotation);
+                            
+                            int rawDeltaX = e.getX() - lastMousePosition.x;
+                            
+                            // Project the 2D movement vector onto the user's vertical axis
+                            adjustedDelta = rawDeltaX * sin + rawDeltaY * cos;
+                        }
+                        
+                        // Scale down when moving mouse up (negative delta), scale up when moving down (positive delta)
+                        float scaleFactor = 1.0f;
+                        if (adjustedDelta != 0) {
+                            scaleFactor = 1.0f + (float)(adjustedDelta * 0.01f);
                             selectedImage.scale(scaleFactor);
                         }
                     }
                     else if (selectedImage.getSourceType().equals("Custom")) {
-                        // Moving for Custom images
-                        int deltaX = e.getX() - lastMousePosition.x;
-                        int deltaY = e.getY() - lastMousePosition.y;
+                        // Moving for Custom images in the user's coordinate space
+                        int rawDeltaX = e.getX() - lastMousePosition.x;
+                        int rawDeltaY = e.getY() - lastMousePosition.y;
+                        
+                        // Transform movement direction based on canvas rotation
+                        double cos = Math.cos(-canvasRotation);
+                        double sin = Math.sin(-canvasRotation);
+                        int deltaX = (int)(rawDeltaX * cos - rawDeltaY * sin);
+                        int deltaY = (int)(rawDeltaX * sin + rawDeltaY * cos);
                         
                         selectedImage.move(deltaX, deltaY, getWidth(), getHeight());
                     }
@@ -167,24 +237,53 @@ class LeftCanvas extends CanvasPanel {
             }
         });
     }
+
     
-    public void selectImageAt(int x, int y) {
+    // Modified to use transformations for hit detection
+    private CanvasImage getImageAt(int x, int y) {
+        Point transformedPoint = transformPoint(x, y);
+        
         for (CanvasImage image : images) {
-            if (image.containsPoint(x, y)) {
-                selectedImage = image;
-                repaint();
-                return;
+            if (image.containsPoint(transformedPoint.x, transformedPoint.y)) {
+                return image;
             }
         }
-        selectedImage = null;
+        return null;
+    }
+    
+    // Transform a point from screen space to canvas space (accounting for canvas rotation)
+    private Point transformPoint(int x, int y) {
+        if (canvasRotation == 0) {
+            return new Point(x, y);
+        }
+        
+        // Center of rotation
+        int centerX = getWidth() / 2;
+        int centerY = getHeight() / 2;
+        
+        // Translate point to origin
+        double translatedX = x - centerX;
+        double translatedY = y - centerY;
+        
+        // Apply inverse rotation
+        double cos = Math.cos(-canvasRotation);
+        double sin = Math.sin(-canvasRotation);
+        double rotatedX = translatedX * cos - translatedY * sin;
+        double rotatedY = translatedX * sin + translatedY * cos;
+        
+        // Translate back
+        int finalX = (int)(rotatedX + centerX);
+        int finalY = (int)(rotatedY + centerY);
+        
+        return new Point(finalX, finalY);
+    }
+    
+    public void selectImageAt(int x, int y) {
+        selectedImage = getImageAt(x, y);
         repaint();
     }
     
     public void addImage(String imagePath, String sourceType) {
-        Image originalImage = new ImageIcon(imagePath).getImage();
-        Image scaledImage = originalImage.getScaledInstance(
-            STANDARD_IMAGE_SIZE, STANDARD_IMAGE_SIZE, Image.SCALE_SMOOTH);
-        
         int x = (getWidth() - STANDARD_IMAGE_SIZE) / 2;
         int y = (getHeight() - STANDARD_IMAGE_SIZE) / 2;
         
@@ -200,8 +299,26 @@ class LeftCanvas extends CanvasPanel {
         y = Math.max(0, Math.min(y, getHeight() - STANDARD_IMAGE_SIZE));
         
         CanvasImage canvasImage = new CanvasImage(scaledImage, x, y, sourceType);
+        // Initialize with the inverse of current canvas rotation to face north
+        if (canvasRotation != 0) {
+            canvasImage.setRotationAngle(-canvasRotation);
+        }
         images.add(canvasImage);
         selectedImage = canvasImage;
+        repaint();
+    }
+    
+    // Add a method to realign images with user perspective
+    public void realignSelectedImage() {
+        if (selectedImage != null) {
+            // Reset the image rotation to compensate for canvas rotation
+            selectedImage.setRotationAngle(-canvasRotation);
+            repaint();
+        }
+    }
+    
+    public void resetCanvasRotation() {
+        canvasRotation = 0;
         repaint();
     }
     
@@ -214,10 +331,34 @@ class LeftCanvas extends CanvasPanel {
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
         
+        // Store all hover hints to render later in screen space
+        List<HintInfo> hoverHints = new ArrayList<>();
+        
+        // Apply canvas rotation
+        if (canvasRotation != 0) {
+            // Rotate around the center of the canvas
+            int centerX = getWidth() / 2;
+            int centerY = getHeight() / 2;
+            
+            AffineTransform canvasTransform = new AffineTransform();
+            canvasTransform.translate(centerX, centerY);
+            canvasTransform.rotate(canvasRotation);
+            canvasTransform.translate(-centerX, -centerY);
+            g2d.transform(canvasTransform);
+            
+            // Draw rotation indicator
+            if (isRotatingCanvas) {
+                g2d.setColor(new Color(255, 0, 0, 100));
+                g2d.fillOval(centerX - 10, centerY - 10, 20, 20);
+                g2d.setColor(Color.RED);
+                g2d.drawLine(centerX, centerY, centerX + 30, centerY);
+            }
+        }
+        
         for (CanvasImage canvasImage : images) {
             canvasImage.draw(g2d, canvasImage == selectedImage, canvasImage == hoveredImage, isRotating);
             
-            // Draw action hint if hovered
+            // Collect hover hint info but don't draw it yet
             if (canvasImage == hoveredImage) {
                 String hint = "";
                 
@@ -237,33 +378,87 @@ class LeftCanvas extends CanvasPanel {
                 }
                 
                 if (!hint.isEmpty()) {
-                    g2d.setColor(new Color(0, 0, 0, 180)); // Semi-transparent black
+                    // Calculate screen position for the hint
+                    int centerX = canvasImage.getX() + canvasImage.getWidth()/2;
+                    int centerY = canvasImage.getY() - 25;
                     
-                    int x = canvasImage.getX() + canvasImage.getWidth()/2;
-                    int y = canvasImage.getY() - 25;
+                    // Transform this point to screen space if canvas is rotated
+                    Point screenPoint;
+                    if (canvasRotation != 0) {
+                        // Inverse transform - canvas space to screen space
+                        int cx = getWidth() / 2;
+                        int cy = getHeight() / 2;
+                        
+                        // Translate to origin
+                        double tx = centerX - cx;
+                        double ty = centerY - cy;
+                        
+                        // Rotate
+                        double cos = Math.cos(canvasRotation);
+                        double sin = Math.sin(canvasRotation);
+                        double rx = tx * cos - ty * sin;
+                        double ry = tx * sin + ty * cos;
+                        
+                        // Translate back
+                        screenPoint = new Point((int)(rx + cx), (int)(ry + cy));
+                    } else {
+                        screenPoint = new Point(centerX, centerY);
+                    }
                     
-                    FontMetrics fm = g2d.getFontMetrics();
-                    int textWidth = fm.stringWidth(hint);
-                    int padding = 10;
-                    
-                    g2d.fillRoundRect(
-                        x - textWidth/2 - padding, 
-                        y - fm.getHeight() + 5, 
-                        textWidth + 2*padding, 
-                        fm.getHeight() + 10, 
-                        10, 
-                        10
-                    );
-                    
-                    g2d.setColor(Color.WHITE);
-                    g2d.setFont(new Font("Arial", Font.PLAIN, 12));
-                    g2d.drawString(
-                        hint, 
-                        x - textWidth/2, 
-                        y
-                    );
+                    hoverHints.add(new HintInfo(hint, screenPoint.x, screenPoint.y));
                 }
             }
+        }
+        
+        // Reset transform for screen space elements
+        g2d.setTransform(new AffineTransform());
+        
+        // Draw all hover hints in screen space
+        for (HintInfo hintInfo : hoverHints) {
+            FontMetrics fm = g2d.getFontMetrics();
+            int textWidth = fm.stringWidth(hintInfo.text);
+            int padding = 10;
+            
+            g2d.setColor(new Color(0, 0, 0, 180)); // Semi-transparent black
+            g2d.fillRoundRect(
+                hintInfo.x - textWidth/2 - padding, 
+                hintInfo.y - fm.getHeight() + 5, 
+                textWidth + 2*padding, 
+                fm.getHeight() + 10, 
+                10, 
+                10
+            );
+            
+            g2d.setColor(Color.WHITE);
+            g2d.setFont(new Font("Arial", Font.PLAIN, 12));
+            g2d.drawString(
+                hintInfo.text, 
+                hintInfo.x - textWidth/2, 
+                hintInfo.y
+            );
+        }
+        
+        // If canvas is rotated, add a hint text
+        if (canvasRotation != 0) {
+            String rotationHint = "Canvas is rotated";
+            
+            g2d.setColor(new Color(0, 0, 0, 180));
+            
+            FontMetrics fm = g2d.getFontMetrics();
+            int textWidth1 = fm.stringWidth(rotationHint);
+            int padding = 5;
+            
+            g2d.fillRoundRect(
+                10, 
+                10, 
+                textWidth1 + 2*padding, 
+                fm.getHeight() + padding*2, 
+                5, 
+                5
+            );
+            
+            g2d.setColor(Color.WHITE);
+            g2d.drawString(rotationHint, 10 + padding, 10 + fm.getAscent() + padding/2);
         }
         
         g2d.dispose();
@@ -271,7 +466,6 @@ class LeftCanvas extends CanvasPanel {
     
     public static class CanvasImage {
         private Image image;
-        private Image originalImage;
         private int x;
         private int y;
         private double rotationAngle = 0;
@@ -285,7 +479,6 @@ class LeftCanvas extends CanvasPanel {
         
         public CanvasImage(Image image, int x, int y, String sourceType) {
             this.image = image;
-            this.originalImage = image;
             this.x = x;
             this.y = y;
             this.sourceType = sourceType;
@@ -447,6 +640,19 @@ class LeftCanvas extends CanvasPanel {
                     g2d.fillOval(centerX - 5, centerY - 5, 10, 10);
                 }
             }
+        }
+    }
+    
+    // Helper class to store hint information
+    private static class HintInfo {
+        String text;
+        int x;
+        int y;
+        
+        public HintInfo(String text, int x, int y) {
+            this.text = text;
+            this.x = x;
+            this.y = y;
         }
     }
 }

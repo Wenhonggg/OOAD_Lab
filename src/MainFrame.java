@@ -4,6 +4,7 @@ import javax.swing.*;
 public class MainFrame extends JFrame {
     private int canvasWidth = 650;
     private int canvasHeight = 730;
+    private LeftCanvas leftCanvas; // Add this field
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new MainFrame().setVisible(true));
@@ -15,12 +16,8 @@ public class MainFrame extends JFrame {
 
         showDimensionDialog();
         setupCanvases();
-        Toolbar tb = new Toolbar(this);
-        add(tb, BorderLayout.NORTH); 
-        
         pack();
         setLocationRelativeTo(null);
-        
     }
 
     private void showDimensionDialog() {
@@ -46,13 +43,12 @@ public class MainFrame extends JFrame {
                 int inputWidth = Integer.parseInt(widthField.getText());
                 int inputHeight = Integer.parseInt(heightField.getText());
 
-                if (inputWidth > canvasWidth || inputHeight > canvasHeight){
+                if (inputWidth > canvasWidth || inputHeight > canvasHeight) {
                     JOptionPane.showMessageDialog(this, "Your input is too large. Using default size");
-                }else{
+                } else {
                     canvasWidth = inputWidth;
                     canvasHeight = inputHeight;
                 }
-
             } catch (NumberFormatException e) {
                 JOptionPane.showMessageDialog(this, "Invalid input! Using default size.");
             }
@@ -64,8 +60,9 @@ public class MainFrame extends JFrame {
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.X_AXIS));
         mainPanel.setBackground(Color.GRAY);
 
-        LeftCanvas leftCanvas = new LeftCanvas(canvasWidth, canvasHeight);
-        RightCanvas rightCanvas = new RightCanvas();
+        leftCanvas = new LeftCanvas(canvasWidth, canvasHeight); // Store reference
+        DrawingToolPanel dtp = new DrawingToolPanel(this);
+        RightCanvas rightCanvas = new RightCanvas(dtp);
 
         JPanel leftWrapper = new JPanel(new GridBagLayout());
         leftWrapper.setBackground(Color.GRAY);
@@ -88,9 +85,25 @@ public class MainFrame extends JFrame {
         rightWrapper.add(rightCanvas, gbcRight);
 
         mainPanel.add(leftWrapper);
-        mainPanel.add(Box.createRigidArea(new Dimension(10, 0))); // spacing between canvases
+        mainPanel.add(Box.createRigidArea(new Dimension(10, 0)));
         mainPanel.add(rightWrapper);
 
         add(mainPanel);
+        
+        // Add toolbar after canvases are created
+        Toolbar tb = new Toolbar(this, leftCanvas, rightCanvas); // Pass canvases to toolbar
+        add(tb, BorderLayout.NORTH);
+
+        tb.createNewRightCanvas();
+    }
+    
+    // Add getter method
+    public LeftCanvas getLeftCanvas() {
+        return leftCanvas;
+    }
+
+    // Add this method to update the reference
+    public void setLeftCanvas(LeftCanvas newCanvas) {
+        this.leftCanvas = newCanvas;
     }
 }

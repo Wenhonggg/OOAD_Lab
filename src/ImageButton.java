@@ -11,15 +11,10 @@ public abstract class ImageButton extends JButton {
     protected String type;
     protected String filePath;
 
-    public ImageButton(JFrame f, String buttonType) {
+    public ImageButton(JFrame f) {
         super();
         frame = f;
-        
-        String projectRoot = System.getProperty("user.dir");
-        this.type = buttonType;
-        this.filePath = projectRoot + "/images/" + type.toLowerCase(); // Initialize filePath
-        
-        setText(this.type);
+        initialize();
         addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -28,11 +23,15 @@ public abstract class ImageButton extends JButton {
         });
     }
     
+    // Abstract method that subclasses must implement
+    protected abstract void initialize();
+    
+    // Keep your existing abstract methods
     protected abstract void performSpecialAction(Object canvas, Object image);
     protected abstract String getActionHint();
     protected abstract int getActionKeyModifier();
 
-    private void showImages() {
+    protected void showImages() {
         JDialog dialog = new JDialog(frame, "Insert Image");
         dialog.setSize(625, 625);
         dialog.setLocationRelativeTo(frame);
@@ -359,6 +358,11 @@ public abstract class ImageButton extends JButton {
         }
         
         protected LeftCanvas findLeftCanvas() {
+            if (mainFrame instanceof MainFrame) {
+                return ((MainFrame) mainFrame).getLeftCanvas();
+            }
+            
+            // Fallback to existing search algorithm
             Component[] components = mainFrame.getContentPane().getComponents();
             for (Component component : components) {
                 if (component instanceof JPanel) {
@@ -386,6 +390,17 @@ public abstract class ImageButton extends JButton {
             if (canvas != null) {
                 canvas.addImageAt(path, position.x, position.y, type);
             }
+        }
+    }
+    
+    protected static Image resizeImage(File file, int w, int h) {
+        try {
+            Image originalImage = new ImageIcon(file.getAbsolutePath()).getImage();
+            Image scaledImage = originalImage.getScaledInstance(w, h, java.awt.Image.SCALE_SMOOTH);
+            return scaledImage;
+        } catch (Exception e) {
+            System.err.println("Error resizing image: " + e.getMessage());
+            return null;
         }
     }
 }

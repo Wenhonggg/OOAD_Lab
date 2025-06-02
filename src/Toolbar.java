@@ -1,22 +1,29 @@
 import java.awt.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-
 import javax.swing.*;
 
 public class Toolbar extends JToolBar {
     private JFrame parent;
+    private LeftCanvas leftCanvas;
+    private RightCanvas rightCanvas;
 
-    public Toolbar(JFrame f) {
+    public Toolbar(JFrame f, LeftCanvas leftCanvas, RightCanvas rightCanvas) {
         super();
         parent = f;
+        this.leftCanvas = leftCanvas;
+        this.rightCanvas = rightCanvas;
+        initializeComponents();
+    }
+
+    private void initializeComponents() {
         add(new NewButton(this));
         add(new SaveButton(parent));
         
-        // Replace the for loop with explicit creation of each subclass
-        add(new AnimalImageButton(parent));
-        add(new FlowerImageButton(parent));
-        add(new CustomImageButton(parent));
+        // Factory method approach
+        for (int i = 0; i < 3; i++) {
+            add(createImageButton(i));
+        }
         
         DrawingToolPanel dtp = new DrawingToolPanel(parent);
         add(dtp);
@@ -28,9 +35,56 @@ public class Toolbar extends JToolBar {
                 dtp.updateOrientation(newOrientation);
             }
         });
+    }
+    
+    private ImageButton createImageButton(int type) {
+        switch (type) {
+            case 0:
+                return new AnimalImageButton(parent);
+            case 1:
+                return new FlowerImageButton(parent);
+            case 2:
+                return new CustomImageButton(parent);
+            default:
+                throw new IllegalArgumentException("Invalid image button type: " + type);
+        }
+    }
 
-        setFloatable(true);
-        setRollover(true);
+    public void createNewLeftCanvas() {
+        // Find the container holding the left canvas
+        Container parent = leftCanvas.getParent();
+        if (parent != null) {
+            // Create new canvas
+            leftCanvas = new LeftCanvas(650, 730);
+            
+            // Update the reference in MainFrame too
+            if (this.parent instanceof MainFrame) {
+                ((MainFrame) this.parent).setLeftCanvas(leftCanvas);
+            }
+            
+            // Replace in container
+            parent.removeAll();
+            parent.add(leftCanvas);
+            parent.revalidate();
+            parent.repaint();
+        }
+    }
+
+    public void createNewRightCanvas() {
+        // Find the container holding the right canvas
+        Container parent = rightCanvas.getParent();
+        if (parent != null) {
+            DrawingToolPanel dtp = getDrawingToolPanel();
+            rightCanvas = new RightCanvas(dtp);
+            parent.removeAll();
+            parent.add(rightCanvas);
+            parent.revalidate();
+            parent.repaint();
+        }
+    }
+
+    public RightCanvas getRightCanvas() {
+        return rightCanvas;
     }
 
     protected String getToolbarPosition() {
@@ -48,5 +102,15 @@ public class Toolbar extends JToolBar {
             else
                 return "SOUTH";
         }
+    }
+
+    // Helper method to get the DrawingToolPanel from the toolbar
+    private DrawingToolPanel getDrawingToolPanel() {
+        for (Component comp : getComponents()) {
+            if (comp instanceof DrawingToolPanel) {
+                return (DrawingToolPanel) comp;
+            }
+        }
+        return null;
     }
 }

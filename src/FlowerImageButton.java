@@ -1,26 +1,41 @@
-import java.awt.event.InputEvent;
 import java.io.File;
+import java.awt.event.InputEvent;
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 
 public class FlowerImageButton extends ImageButton {
     
-    public FlowerImageButton(JFrame f) {
-        super(f, "Flower");
+    public FlowerImageButton(JFrame frame) {
+        super(frame);
+    }
+    
+    @Override
+    protected void initialize() {
+        this.type = "Flower";
         String projectRoot = System.getProperty("user.dir");
-        filePath = projectRoot + File.separator + "assets" + File.separator + "flowers";
+        this.filePath = projectRoot + File.separator + "assets" + File.separator + "flowers";
+        
+        File iconFile = new File(projectRoot + File.separator + "assets" + File.separator + 
+                               "toolbarIcons" + File.separator + "flowerIcon.png");
+        
+        if (iconFile.exists()) {
+            setIcon(new ImageIcon(resizeImage(iconFile, 30, 30)));
+        } else {
+            setText("Flower");
+        }
     }
     
     @Override
     protected void performSpecialAction(Object canvasObj, Object imageObj) {
         try {
-            // Use reflection to call the scale method on the image object
+            // Example: Rotate the flower image
             if (imageObj != null) {
-                // Find the scale method
-                java.lang.reflect.Method scaleMethod = 
-                    imageObj.getClass().getMethod("scale", float.class);
+                // Find the rotate method
+                java.lang.reflect.Method rotateMethod = 
+                    imageObj.getClass().getMethod("rotate", double.class);
                 
-                // Call the method
-                scaleMethod.invoke(imageObj, 1.1f);
+                // Call the method to rotate by 45 degrees
+                rotateMethod.invoke(imageObj, Math.toRadians(45));
                 
                 // Find and call the repaint method on the canvas
                 if (canvasObj != null) {
@@ -37,7 +52,7 @@ public class FlowerImageButton extends ImageButton {
     
     @Override
     protected String getActionHint() {
-        return "Press ALT to scale image";
+        return "Press ALT to rotate image 45 degrees";
     }
     
     @Override

@@ -18,7 +18,7 @@ public class Toolbar extends JToolBar {
 
     private void initializeComponents() {
         add(new NewButton(this));
-        add(new SaveButton(parent));
+        add(new SaveButton(parent, leftCanvas, rightCanvas));
         
         // Factory method approach
         for (int i = 0; i < 3; i++) {
@@ -51,24 +51,26 @@ public class Toolbar extends JToolBar {
     }
 
     public void createNewLeftCanvas() {
-        // Find the container holding the left canvas
-        Container parent = leftCanvas.getParent();
-        if (parent != null) {
-            // Create new canvas
-            leftCanvas = new LeftCanvas(650, 730);
-            
-            // Update the reference in MainFrame too
-            if (this.parent instanceof MainFrame) {
-                ((MainFrame) this.parent).setLeftCanvas(leftCanvas);
-            }
-            
-            // Replace in container
-            parent.removeAll();
-            parent.add(leftCanvas);
-            parent.revalidate();
-            parent.repaint();
+    if (parent instanceof MainFrame) {
+        MainFrame mf = (MainFrame) parent;
+        mf.showDimensionDialog(); // show popup
+
+        int width = mf.getCanvasWidth();
+        int height = mf.getCanvasHeight();
+
+        Container container = leftCanvas.getParent();
+        if (container != null) {
+            leftCanvas = new LeftCanvas(width, height);
+            mf.setLeftCanvas(leftCanvas); // update reference
+
+            container.removeAll();
+            container.add(leftCanvas);
+            container.revalidate();
+            container.repaint();
         }
     }
+}
+
 
     public void createNewRightCanvas() {
         // Find the container holding the right canvas

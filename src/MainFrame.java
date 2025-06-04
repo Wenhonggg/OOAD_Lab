@@ -16,11 +16,13 @@ public class MainFrame extends JFrame {
 
         showDimensionDialog();
         setupCanvases();
-        pack();
+        pack(); 
         setLocationRelativeTo(null);
     }
 
-    private void showDimensionDialog() {
+    public void showDimensionDialog() {
+        final int maxcanvasWidth = 650;
+        final int maxcanvasHeight = 730;
         JCheckBox defaultCheck = new JCheckBox("Use default size (650x730)");
         JTextField widthField = new JTextField("650");
         JTextField heightField = new JTextField("730");
@@ -43,7 +45,7 @@ public class MainFrame extends JFrame {
                 int inputWidth = Integer.parseInt(widthField.getText());
                 int inputHeight = Integer.parseInt(heightField.getText());
 
-                if (inputWidth > canvasWidth || inputHeight > canvasHeight) {
+                if (inputWidth > maxcanvasWidth || inputHeight > maxcanvasHeight) {
                     JOptionPane.showMessageDialog(this, "Your input is too large. Using default size");
                 } else {
                     canvasWidth = inputWidth;
@@ -52,7 +54,18 @@ public class MainFrame extends JFrame {
             } catch (NumberFormatException e) {
                 JOptionPane.showMessageDialog(this, "Invalid input! Using default size.");
             }
+        }else if (defaultCheck.isSelected()){
+            canvasWidth = maxcanvasWidth;
+            canvasHeight = maxcanvasHeight;
         }
+    }
+    
+    public int getCanvasWidth() {
+        return canvasWidth;
+    }
+
+    public int getCanvasHeight() {
+        return canvasHeight;
     }
 
     private void setupCanvases() {

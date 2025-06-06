@@ -1,5 +1,6 @@
 import java.io.File;
 import java.awt.event.InputEvent;
+import java.awt.event.MouseEvent;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 
@@ -27,36 +28,40 @@ public class CustomImageButton extends ImageButton {
     
     @Override
     protected void performSpecialAction(Object canvasObj, Object imageObj) {
-        try {
-            // Example: Apply a filter to the custom image
-            if (imageObj != null) {
-                // Find the applyFilter method
-                java.lang.reflect.Method filterMethod = 
-                    imageObj.getClass().getMethod("applyFilter", String.class);
-                
-                // Call the method to apply grayscale filter
-                filterMethod.invoke(imageObj, "grayscale");
-                
-                // Find and call the repaint method on the canvas
-                if (canvasObj != null) {
-                    java.lang.reflect.Method repaintMethod = 
-                        canvasObj.getClass().getMethod("repaint");
-                    repaintMethod.invoke(canvasObj);
-                }
-            }
-        } catch (Exception e) {
-            System.err.println("Error performing custom image action: " + e.getMessage());
-            e.printStackTrace();
-        }
+        // This method will be called from mouse drag event
+        // The actual moving logic is handled in handleMouseDrag method
     }
     
     @Override
     protected String getActionHint() {
-        return "Press CTRL to apply grayscale filter";
+        return "Press CTRL+SHIFT to move image";
     }
     
     @Override
     protected int getActionKeyModifier() {
-        return InputEvent.CTRL_DOWN_MASK;
+        return InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK;
+    }
+    
+    // Handle mouse drag for custom image moving
+    public void handleMouseDrag(Object canvasObj, Object imageObj, MouseEvent currentEvent, MouseEvent lastEvent, double canvasRotation) {
+        if (imageObj instanceof LeftCanvas.CanvasImage) {
+            LeftCanvas.CanvasImage selectedImage = (LeftCanvas.CanvasImage) imageObj;
+            
+            // Moving for Custom images in the user's coordinate space
+            int rawDeltaX = currentEvent.getX() - lastEvent.getX();
+            int rawDeltaY = currentEvent.getY() - lastEvent.getY();
+            
+            // Transform movement direction based on canvas rotation
+            double cos = Math.cos(-canvasRotation);
+            double sin = Math.sin(-canvasRotation);
+            int deltaX = (int)(rawDeltaX * cos - rawDeltaY * sin);
+            int deltaY = (int)(rawDeltaX * sin + rawDeltaY * cos);
+            
+            if (canvasObj instanceof LeftCanvas) {
+                LeftCanvas canvas = (LeftCanvas) canvasObj;
+                selectedImage.move(deltaX, deltaY, canvas.getWidth(), canvas.getHeight());
+                canvas.repaint();
+            }
+        }
     }
 }

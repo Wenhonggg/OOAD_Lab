@@ -27,36 +27,36 @@ public class AnimalImageButton extends ImageButton {
     
     @Override
     protected void performSpecialAction(Object canvasObj, Object imageObj) {
-        try {
-            // Use reflection to call the flip method on the image object
-            if (imageObj != null) {
-                // Find the flip method
-                java.lang.reflect.Method flipMethod = 
-                    imageObj.getClass().getMethod("flip", boolean.class);
-                
-                // Call the method
-                flipMethod.invoke(imageObj, true);
-                
-                // Find and call the repaint method on the canvas
-                if (canvasObj != null) {
-                    java.lang.reflect.Method repaintMethod = 
-                        canvasObj.getClass().getMethod("repaint");
-                    repaintMethod.invoke(canvasObj);
-                }
+        // Handle SHIFT key for horizontal flip
+        if (imageObj instanceof LeftCanvas.CanvasImage) {
+            LeftCanvas.CanvasImage selectedImage = (LeftCanvas.CanvasImage) imageObj;
+            selectedImage.flip(true); // Flip horizontally
+            
+            if (canvasObj instanceof LeftCanvas) {
+                ((LeftCanvas) canvasObj).repaint();
             }
-        } catch (Exception e) {
-            System.err.println("Error performing animal image action: " + e.getMessage());
-            e.printStackTrace();
         }
     }
     
     @Override
     protected String getActionHint() {
-        return "Press SHIFT to flip image horizontally";
+        return "Press SHIFT to flip horizontally (Right-click to flip vertically)";
     }
     
     @Override
     protected int getActionKeyModifier() {
         return InputEvent.SHIFT_DOWN_MASK;
+    }
+    
+    // Handle right-click for vertical flip
+    public void handleRightClick(Object canvasObj, Object imageObj) {
+        if (imageObj instanceof LeftCanvas.CanvasImage) {
+            LeftCanvas.CanvasImage selectedImage = (LeftCanvas.CanvasImage) imageObj;
+            selectedImage.flip(false); // Flip vertically on right click
+            
+            if (canvasObj instanceof LeftCanvas) {
+                ((LeftCanvas) canvasObj).repaint();
+            }
+        }
     }
 }

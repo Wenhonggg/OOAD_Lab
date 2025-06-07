@@ -115,6 +115,20 @@ public class SaveButton extends JButton {
                         JFileChooser fileChooser = new JFileChooser();
                         fileChooser.setDialogTitle("Save Image");
 
+                        try {
+                            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+                            SwingUtilities.updateComponentTreeUI(fileChooser);
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
+                        
+                        UIManager.put("FileChooser.background", new Color(240, 240, 245));
+                        UIManager.put("FileChooser.foreground", new Color(50, 50, 50));
+                        UIManager.put("FileChooser.selectionBackground", new Color(116, 184, 252));
+                        UIManager.put("FileChooser.selectionForeground", Color.WHITE);
+                        
+                        fileChooser.setPreferredSize(new Dimension(700, 500));
+
                         FileNameExtensionFilter filter = new FileNameExtensionFilter(
                             format.toUpperCase() + " Image (*." + format + ")", format);
                         fileChooser.setFileFilter(filter);

@@ -27,10 +27,9 @@ public class AnimalImageButton extends ImageButton {
     
     @Override
     protected void performSpecialAction(Object canvasObj, Object imageObj) {
-        // Handle SHIFT key for horizontal flip
         if (imageObj instanceof LeftCanvas.CanvasImage) {
             LeftCanvas.CanvasImage selectedImage = (LeftCanvas.CanvasImage) imageObj;
-            selectedImage.flip(true); // Flip horizontally
+            selectedImage.flip(true); 
             
             if (canvasObj instanceof LeftCanvas) {
                 ((LeftCanvas) canvasObj).repaint();
@@ -48,11 +47,10 @@ public class AnimalImageButton extends ImageButton {
         return InputEvent.SHIFT_DOWN_MASK;
     }
     
-    // Handle right-click for vertical flip
     public void handleRightClick(Object canvasObj, Object imageObj) {
         if (imageObj instanceof LeftCanvas.CanvasImage) {
             LeftCanvas.CanvasImage selectedImage = (LeftCanvas.CanvasImage) imageObj;
-            selectedImage.flip(false); // Flip vertically on right click
+            selectedImage.flip(false); 
             
             if (canvasObj instanceof LeftCanvas) {
                 ((LeftCanvas) canvasObj).repaint();

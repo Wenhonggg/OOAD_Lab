@@ -22,11 +22,8 @@ public abstract class ImageButton extends JButton {
             }
         });
     }
-    
-    // Abstract method that subclasses must implement
+
     protected abstract void initialize();
-    
-    // Keep your existing abstract methods
     protected abstract void performSpecialAction(Object canvas, Object image);
     protected abstract String getActionHint();
     protected abstract int getActionKeyModifier();
@@ -173,7 +170,7 @@ public abstract class ImageButton extends JButton {
                                     JPanel imageContainer = createImageContainer(imagePath);
                                     MouseDragHandler handler = new MouseDragHandler(imageContainer, imagePath, dialog, frame);
                                     imageContainer.addMouseListener(handler);
-                                    imageContainer.addMouseMotionListener(handler); // Add motion listener
+                                    imageContainer.addMouseMotionListener(handler); 
                                     imagesPanel.add(imageContainer);
                                 }
                             }
@@ -362,7 +359,6 @@ public abstract class ImageButton extends JButton {
                 return ((MainFrame) mainFrame).getLeftCanvas();
             }
             
-            // Fallback to existing search algorithm
             Component[] components = mainFrame.getContentPane().getComponents();
             for (Component component : components) {
                 if (component instanceof JPanel) {

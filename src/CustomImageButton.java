@@ -28,8 +28,7 @@ public class CustomImageButton extends ImageButton {
     
     @Override
     protected void performSpecialAction(Object canvasObj, Object imageObj) {
-        // This method will be called from mouse drag event
-        // The actual moving logic is handled in handleMouseDrag method
+
     }
     
     @Override
@@ -42,16 +41,13 @@ public class CustomImageButton extends ImageButton {
         return InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK;
     }
     
-    // Handle mouse drag for custom image moving
     public void handleMouseDrag(Object canvasObj, Object imageObj, MouseEvent currentEvent, MouseEvent lastEvent, double canvasRotation) {
         if (imageObj instanceof LeftCanvas.CanvasImage) {
             LeftCanvas.CanvasImage selectedImage = (LeftCanvas.CanvasImage) imageObj;
             
-            // Moving for Custom images in the user's coordinate space
             int rawDeltaX = currentEvent.getX() - lastEvent.getX();
             int rawDeltaY = currentEvent.getY() - lastEvent.getY();
             
-            // Transform movement direction based on canvas rotation
             double cos = Math.cos(-canvasRotation);
             double sin = Math.sin(-canvasRotation);
             int deltaX = (int)(rawDeltaX * cos - rawDeltaY * sin);

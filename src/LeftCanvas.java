@@ -291,14 +291,22 @@ class LeftCanvas extends CanvasPanel {
     }
     
     public void addImageAt(String imagePath, int x, int y, String sourceType) {
+        // Transform the drop coordinates from screen space to canvas space
+        Point transformedPoint = transformPoint(x, y);
+        
         Image originalImage = new ImageIcon(imagePath).getImage();
         Image scaledImage = originalImage.getScaledInstance(
             STANDARD_IMAGE_SIZE, STANDARD_IMAGE_SIZE, Image.SCALE_SMOOTH);
         
-        x = Math.max(0, Math.min(x, getWidth() - STANDARD_IMAGE_SIZE));
-        y = Math.max(0, Math.min(y, getHeight() - STANDARD_IMAGE_SIZE));
+        // Center the image more precisely on the drop point
+        int centeredX = transformedPoint.x - (STANDARD_IMAGE_SIZE / 2);
+        int centeredY = transformedPoint.y - (STANDARD_IMAGE_SIZE / 2);
         
-        CanvasImage canvasImage = new CanvasImage(scaledImage, x, y, sourceType);
+        // Use centered coordinates for bounds checking
+        int finalX = Math.max(0, Math.min(centeredX, getWidth() - STANDARD_IMAGE_SIZE));
+        int finalY = Math.max(0, Math.min(centeredY, getHeight() - STANDARD_IMAGE_SIZE));
+        
+        CanvasImage canvasImage = new CanvasImage(scaledImage, finalX, finalY, sourceType);
         // Initialize with the inverse of current canvas rotation to face north
         if (canvasRotation != 0) {
             canvasImage.setRotationAngle(-canvasRotation);

@@ -305,8 +305,8 @@ public abstract class ImageButton extends JButton {
                     
                     if (canvasBounds.contains(screenPos)) {
                         Point relativePos = new Point(
-                            screenPos.x - canvasPos.x - 75,
-                            screenPos.y - canvasPos.y - 75
+                            screenPos.x - canvasPos.x,
+                            screenPos.y - canvasPos.y
                         );
                         
                         addImageToCanvasAt(leftCanvas, imagePath, relativePos);

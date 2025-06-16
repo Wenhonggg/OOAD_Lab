@@ -25,9 +25,15 @@ public class FlowerImageButton extends ImageButton {
             setText("Flower");
         }
     }
-    
+
     @Override
-    protected void performSpecialAction(Object canvasObj, Object imageObj) {
+    public void handleMousePressed(LeftCanvas canvas, LeftCanvas.CanvasImage image, MouseEvent e) {
+        // No special press action for FlowerImageButton
+    }
+
+    @Override
+    public void handleRightClick(LeftCanvas canvas, LeftCanvas.CanvasImage image) {
+        // No right click action for FlowerImageButton
     }
     
     @Override
@@ -40,34 +46,27 @@ public class FlowerImageButton extends ImageButton {
         return InputEvent.ALT_DOWN_MASK;
     }
     
-    public void handleMouseDrag(Object canvasObj, Object imageObj, MouseEvent currentEvent, MouseEvent lastEvent, double canvasRotation) {
-        if (imageObj instanceof LeftCanvas.CanvasImage) {
-            LeftCanvas.CanvasImage selectedImage = (LeftCanvas.CanvasImage) imageObj;
-            
-            int rawDeltaY = currentEvent.getY() - lastEvent.getY();  
-            
-            double adjustedDelta;
-            
-            if (canvasRotation == 0) {
-                adjustedDelta = rawDeltaY;
-            } else {
-                double cos = Math.cos(-canvasRotation);  
-                double sin = Math.sin(-canvasRotation);
-                
-                int rawDeltaX = currentEvent.getX() - lastEvent.getX();
-
-                adjustedDelta = rawDeltaX * sin + rawDeltaY * cos;
-            }
-            
-            float scaleFactor = 1.0f;
-            if (adjustedDelta != 0) {
-                scaleFactor = 1.0f + (float)(adjustedDelta * 0.01f);
-                selectedImage.scale(scaleFactor);
-            }
-            
-            if (canvasObj instanceof LeftCanvas) {
-                ((LeftCanvas) canvasObj).repaint();
-            }
+    @Override
+    protected void performSpecialAction(LeftCanvas canvas, LeftCanvas.CanvasImage image, 
+                                     MouseEvent currentEvent, MouseEvent lastEvent, 
+                                     double canvasRotation) {
+        int rawDeltaY = currentEvent.getY() - lastEvent.getY();  
+        double adjustedDelta;
+        
+        if (canvasRotation == 0) {
+            adjustedDelta = rawDeltaY;
+        } else {
+            double cos = Math.cos(-canvasRotation);  
+            double sin = Math.sin(-canvasRotation);
+            int rawDeltaX = currentEvent.getX() - lastEvent.getX();
+            adjustedDelta = rawDeltaX * sin + rawDeltaY * cos;
         }
+        
+        float scaleFactor = 1.0f;
+        if (adjustedDelta != 0) {
+            scaleFactor = 1.0f + (float)(adjustedDelta * 0.01f);
+            image.scale(scaleFactor);
+        }
+        canvas.repaint();
     }
 }

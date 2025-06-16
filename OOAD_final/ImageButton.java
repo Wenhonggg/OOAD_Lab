@@ -24,9 +24,13 @@ public abstract class ImageButton extends JButton {
     }
 
     protected abstract void initialize();
-    protected abstract void performSpecialAction(Object canvas, Object image);
+    protected abstract void performSpecialAction(LeftCanvas canvas, LeftCanvas.CanvasImage image, 
+                                              MouseEvent currentEvent, MouseEvent lastEvent, 
+                                              double canvasRotation);
     protected abstract String getActionHint();
     protected abstract int getActionKeyModifier();
+    public abstract void handleMousePressed(LeftCanvas canvas, LeftCanvas.CanvasImage image, MouseEvent e);
+    public abstract void handleRightClick(LeftCanvas canvas, LeftCanvas.CanvasImage image);
 
     protected void showImages() {
         JDialog dialog = new JDialog(frame, "Insert Image");
@@ -398,5 +402,9 @@ public abstract class ImageButton extends JButton {
             System.err.println("Error resizing image: " + e.getMessage());
             return null;
         }
+    }
+
+    public String getType() {
+        return type;
     }
 }

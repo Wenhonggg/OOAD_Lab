@@ -9,6 +9,10 @@ public class Toolbar extends JToolBar {
     private RightCanvas rightCanvas;
     private SaveButton saveButton; // Store reference to save button
 
+    private enum ButtonType {
+        ANIMAL, FLOWER, CUSTOM
+    }
+
     public Toolbar(JFrame f, LeftCanvas leftCanvas, RightCanvas rightCanvas) {
         super();
         parent = f;
@@ -42,12 +46,13 @@ public class Toolbar extends JToolBar {
     }
     
     private ImageButton createImageButton(int type) {
-        switch (type) {
-            case 0:
+        ButtonType buttonType = ButtonType.values()[type];
+        switch (buttonType) {
+            case ANIMAL:
                 return new AnimalImageButton(parent);
-            case 1:
+            case FLOWER:
                 return new FlowerImageButton(parent);
-            case 2:
+            case CUSTOM:
                 return new CustomImageButton(parent);
             default:
                 throw new IllegalArgumentException("Invalid image button type: " + type);
@@ -57,22 +62,22 @@ public class Toolbar extends JToolBar {
     public void createNewLeftCanvas() {
         if (parent instanceof MainFrame) {
             MainFrame mf = (MainFrame) parent;
-            mf.showDimensionDialog(); // show popup
+            mf.showDimensionDialog();
 
             int width = mf.getCanvasWidth();
             int height = mf.getCanvasHeight();
 
             Container container = leftCanvas.getParent();
             if (container != null) {
-                leftCanvas = new LeftCanvas(width, height);
-                mf.setLeftCanvas(leftCanvas); // update reference
+                // Pass 'this' (Toolbar) as the third parameter
+                leftCanvas = new LeftCanvas(width, height, this);
+                mf.setLeftCanvas(leftCanvas);
 
                 container.removeAll();
                 container.add(leftCanvas);
                 container.revalidate();
                 container.repaint();
                 
-                // Update save button with new canvas reference
                 saveButton.updateCanvases(leftCanvas, rightCanvas);
             }
         }
@@ -128,5 +133,9 @@ public class Toolbar extends JToolBar {
             }
         }
         return null;
+    }
+
+    public String getType() {
+        return "Toolbar";
     }
 }

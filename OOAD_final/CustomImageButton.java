@@ -27,8 +27,13 @@ public class CustomImageButton extends ImageButton {
     }
     
     @Override
-    protected void performSpecialAction(Object canvasObj, Object imageObj) {
+    public void handleMousePressed(LeftCanvas canvas, LeftCanvas.CanvasImage image, MouseEvent e) {
+        // No special press action for CustomImageButton
+    }
 
+    @Override
+    public void handleRightClick(LeftCanvas canvas, LeftCanvas.CanvasImage image) {
+        // No right click action for CustomImageButton
     }
     
     @Override
@@ -41,23 +46,19 @@ public class CustomImageButton extends ImageButton {
         return InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK;
     }
     
-    public void handleMouseDrag(Object canvasObj, Object imageObj, MouseEvent currentEvent, MouseEvent lastEvent, double canvasRotation) {
-        if (imageObj instanceof LeftCanvas.CanvasImage) {
-            LeftCanvas.CanvasImage selectedImage = (LeftCanvas.CanvasImage) imageObj;
-            
-            int rawDeltaX = currentEvent.getX() - lastEvent.getX();
-            int rawDeltaY = currentEvent.getY() - lastEvent.getY();
-            
-            double cos = Math.cos(-canvasRotation);
-            double sin = Math.sin(-canvasRotation);
-            int deltaX = (int)(rawDeltaX * cos - rawDeltaY * sin);
-            int deltaY = (int)(rawDeltaX * sin + rawDeltaY * cos);
-            
-            if (canvasObj instanceof LeftCanvas) {
-                LeftCanvas canvas = (LeftCanvas) canvasObj;
-                selectedImage.move(deltaX, deltaY, canvas.getWidth(), canvas.getHeight());
-                canvas.repaint();
-            }
-        }
+    @Override
+    protected void performSpecialAction(LeftCanvas canvas, LeftCanvas.CanvasImage image, 
+                                     MouseEvent currentEvent, MouseEvent lastEvent, 
+                                     double canvasRotation) {
+        int rawDeltaX = currentEvent.getX() - lastEvent.getX();
+        int rawDeltaY = currentEvent.getY() - lastEvent.getY();
+        
+        double cos = Math.cos(-canvasRotation);
+        double sin = Math.sin(-canvasRotation);
+        int deltaX = (int)(rawDeltaX * cos - rawDeltaY * sin);
+        int deltaY = (int)(rawDeltaX * sin + rawDeltaY * cos);
+        
+        image.move(deltaX, deltaY, canvas.getWidth(), canvas.getHeight());
+        canvas.repaint();
     }
 }

@@ -16,9 +16,11 @@ class LeftCanvas extends CanvasPanel {
     private double canvasRotation = 0;
     private boolean isRotatingCanvas = false;
     private Point canvasRotationCenter;
+    private Toolbar toolbar;
     
-    public LeftCanvas(int width, int height) {
+    public LeftCanvas(int width, int height, Toolbar toolbar) {
         super(width, height);
+        this.toolbar = toolbar;
         setupMouseListeners();
     }
     
@@ -27,7 +29,6 @@ class LeftCanvas extends CanvasPanel {
             @Override
             public void mousePressed(MouseEvent e) {
                 lastMousePosition = e.getPoint();
-
                 CanvasImage clickedImage = getImageAt(e.getX(), e.getY());
                 
                 if (clickedImage != null) {
@@ -40,29 +41,9 @@ class LeftCanvas extends CanvasPanel {
                         setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
                     } 
                     else if (selectedImage.getSourceType() != null) {
-                        int modifiers = e.getModifiersEx();
-                        
-                        if (selectedImage.getSourceType().equals("Animal") && 
-                            (modifiers & InputEvent.SHIFT_DOWN_MASK) != 0) {
-                            isPerformingSpecialAction = true;
-                            isRotating = false;
-                            isRotatingCanvas = false;
-                            selectedImage.flip(true); 
-                            repaint();
-                        }
-                        else if (selectedImage.getSourceType().equals("Flower") && 
-                                (modifiers & InputEvent.ALT_DOWN_MASK) != 0) {
-                            isPerformingSpecialAction = true;
-                            isRotating = false;
-                            isRotatingCanvas = false;
-                        }
-                        else if (selectedImage.getSourceType().equals("Custom") && 
-                                (modifiers & (InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK)) 
-                                == (InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK)) {
-                            isPerformingSpecialAction = true;
-                            isRotating = false;
-                            isRotatingCanvas = false;
-                            setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
+                        ImageButton button = getButtonForType(selectedImage.getSourceType());
+                        if (button != null) {
+                            button.handleMousePressed(LeftCanvas.this, selectedImage, e);
                         }
                     }
                 } 
@@ -81,26 +62,17 @@ class LeftCanvas extends CanvasPanel {
             }
             
             @Override
-            public void mouseReleased(MouseEvent e) {
-                isRotating = false;
-                isPerformingSpecialAction = false;
-                isRotatingCanvas = false;
-                setCursor(Cursor.getDefaultCursor());
-                lastMousePosition = null;
-                repaint();
-            }
-            
-            @Override
             public void mouseClicked(MouseEvent e) {
                 if (!isRotating && !isPerformingSpecialAction && !isRotatingCanvas) {
                     selectImageAt(e.getX(), e.getY());
                 }
                 
                 if (e.getButton() == MouseEvent.BUTTON3 && selectedImage != null && 
-                    selectedImage.getSourceType() != null && 
-                    selectedImage.getSourceType().equals("Animal")) {
-                    selectedImage.flip(false); 
-                    repaint();
+                    selectedImage.getSourceType() != null) {
+                    ImageButton button = getButtonForType(selectedImage.getSourceType());
+                    if (button != null) {
+                        button.handleRightClick(LeftCanvas.this, selectedImage);
+                    }
                 }
             }
             
@@ -170,41 +142,44 @@ class LeftCanvas extends CanvasPanel {
                     lastMousePosition = e.getPoint();
                     repaint();
                 }
-                else if (isPerformingSpecialAction && selectedImage != null) {
-                    if (selectedImage.getSourceType().equals("Flower")) {
-                        int rawDeltaY = e.getY() - lastMousePosition.y; 
-                        double adjustedDelta;
-                        if (canvasRotation == 0) {
-                            adjustedDelta = rawDeltaY;
-                        } else {
-                            double cos = Math.cos(-canvasRotation);  
-                            double sin = Math.sin(-canvasRotation);
-                            int rawDeltaX = e.getX() - lastMousePosition.x;
-                            adjustedDelta = rawDeltaX * sin + rawDeltaY * cos;
-                        }
-
-                        float scaleFactor = 1.0f;
-                        if (adjustedDelta != 0) {
-                            scaleFactor = 1.0f + (float)(adjustedDelta * 0.01f);
-                            selectedImage.scale(scaleFactor);
-                        }
+                else if (isPerformingSpecialAction && selectedImage != null && 
+                         selectedImage.getSourceType() != null) {
+                    ImageButton button = getButtonForType(selectedImage.getSourceType());
+                    if (button != null) {
+                        button.performSpecialAction(
+                            LeftCanvas.this, 
+                            selectedImage, 
+                            e, 
+                            new MouseEvent(
+                                e.getComponent(), 
+                                e.getID(), 
+                                e.getWhen(), 
+                                e.getModifiersEx(), 
+                                lastMousePosition.x, 
+                                lastMousePosition.y, 
+                                e.getClickCount(), 
+                                e.isPopupTrigger()
+                            ),
+                            canvasRotation
+                        );
                     }
-                    else if (selectedImage.getSourceType().equals("Custom")) {
-                        int rawDeltaX = e.getX() - lastMousePosition.x;
-                        int rawDeltaY = e.getY() - lastMousePosition.y;
-
-                        double cos = Math.cos(-canvasRotation);
-                        double sin = Math.sin(-canvasRotation);
-                        int deltaX = (int)(rawDeltaX * cos - rawDeltaY * sin);
-                        int deltaY = (int)(rawDeltaX * sin + rawDeltaY * cos);
-                        selectedImage.move(deltaX, deltaY, getWidth(), getHeight());
-                    }
-                    
-                    lastMousePosition = e.getPoint();
-                    repaint();
                 }
             }
         });
+    }
+
+    private ImageButton getButtonForType(String type) {
+        if (toolbar == null || type == null) return null;
+        
+        for (Component comp : toolbar.getComponents()) {
+            if (comp instanceof ImageButton) {
+                ImageButton button = (ImageButton) comp;
+                if (type.equals(button.getType())) {
+                    return button;
+                }
+            }
+        }
+        return null;
     }
 
     private CanvasImage getImageAt(int x, int y) {
@@ -303,42 +278,35 @@ class LeftCanvas extends CanvasPanel {
         for (CanvasImage canvasImage : images) {
             canvasImage.draw(g2d, canvasImage == selectedImage, canvasImage == hoveredImage, isRotating);
             
-            if (canvasImage == hoveredImage) {
-                String hint = "";
-
-                if (canvasImage.getSourceType().equals("Animal")) {
-                    hint = "Press SHIFT to flip horizontally (Right-click to flip vertically)";
-                }
-                else if (canvasImage.getSourceType().equals("Flower")) {
-                    hint = "Press ALT and drag up/down to scale image";
-                }
-                else if (canvasImage.getSourceType().equals("Custom")) {
-                    hint = "Press CTRL+SHIFT to move image";
-                }
-                
-                if (!hint.isEmpty()) {
-                    int centerX = canvasImage.getX() + canvasImage.getWidth()/2;
-                    int centerY = canvasImage.getY() - 25;
-
-                    Point screenPoint;
-                    if (canvasRotation != 0) {
-                        int cx = getWidth() / 2;
-                        int cy = getHeight() / 2;
-
-                        double tx = centerX - cx;
-                        double ty = centerY - cy;
-
-                        double cos = Math.cos(canvasRotation);
-                        double sin = Math.sin(canvasRotation);
-                        double rx = tx * cos - ty * sin;
-                        double ry = tx * sin + ty * cos;
-
-                        screenPoint = new Point((int)(rx + cx), (int)(ry + cy));
-                    } else {
-                        screenPoint = new Point(centerX, centerY);
-                    }
+            if (canvasImage == hoveredImage && canvasImage.getSourceType() != null) {
+                ImageButton button = getButtonForType(canvasImage.getSourceType());
+                if (button != null) {
+                    String hint = button.getActionHint();
                     
-                    hoverHints.add(new HintInfo(hint, screenPoint.x, screenPoint.y));
+                    if (hint != null && !hint.isEmpty()) {
+                        int centerX = canvasImage.getX() + canvasImage.getWidth()/2;
+                        int centerY = canvasImage.getY() - 25;
+
+                        Point screenPoint;
+                        if (canvasRotation != 0) {
+                            int cx = getWidth() / 2;
+                            int cy = getHeight() / 2;
+
+                            double tx = centerX - cx;
+                            double ty = centerY - cy;
+
+                            double cos = Math.cos(canvasRotation);
+                            double sin = Math.sin(canvasRotation);
+                            double rx = tx * cos - ty * sin;
+                            double ry = tx * sin + ty * cos;
+
+                            screenPoint = new Point((int)(rx + cx), (int)(ry + cy));
+                        } else {
+                            screenPoint = new Point(centerX, centerY);
+                        }
+                        
+                        hoverHints.add(new HintInfo(hint, screenPoint.x, screenPoint.y));
+                    }
                 }
             }
         }
@@ -396,6 +364,10 @@ class LeftCanvas extends CanvasPanel {
         g2d.dispose();
     }
     
+    public void setToolbar(Toolbar toolbar) {
+        this.toolbar = toolbar;
+    }
+
     public static class CanvasImage {
         private Image image;
         private int x;

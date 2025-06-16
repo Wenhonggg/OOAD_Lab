@@ -2,6 +2,7 @@ import java.awt.event.InputEvent;
 import java.io.File;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
+import java.awt.event.MouseEvent;
 
 public class AnimalImageButton extends ImageButton {
     
@@ -24,17 +25,28 @@ public class AnimalImageButton extends ImageButton {
             setText("Animal");
         }
     }
-    
+
     @Override
-    protected void performSpecialAction(Object canvasObj, Object imageObj) {
-        if (imageObj instanceof LeftCanvas.CanvasImage) {
-            LeftCanvas.CanvasImage selectedImage = (LeftCanvas.CanvasImage) imageObj;
-            selectedImage.flip(true); 
-            
-            if (canvasObj instanceof LeftCanvas) {
-                ((LeftCanvas) canvasObj).repaint();
+    public void handleMousePressed(LeftCanvas canvas, LeftCanvas.CanvasImage image, MouseEvent e) {
+        if (e != null && image != null && e.isShiftDown()) {
+            image.flip(true);
+            if (canvas != null) {
+                canvas.repaint();
             }
         }
+    }
+
+    @Override
+    public void handleRightClick(LeftCanvas canvas, LeftCanvas.CanvasImage image) {
+        image.flip(false);
+        canvas.repaint();
+    }
+    
+    @Override
+    protected void performSpecialAction(LeftCanvas canvas, LeftCanvas.CanvasImage image, 
+                                     MouseEvent currentEvent, MouseEvent lastEvent, 
+                                     double canvasRotation) {
+        // No drag action for AnimalImageButton
     }
     
     @Override
@@ -45,16 +57,5 @@ public class AnimalImageButton extends ImageButton {
     @Override
     protected int getActionKeyModifier() {
         return InputEvent.SHIFT_DOWN_MASK;
-    }
-    
-    public void handleRightClick(Object canvasObj, Object imageObj) {
-        if (imageObj instanceof LeftCanvas.CanvasImage) {
-            LeftCanvas.CanvasImage selectedImage = (LeftCanvas.CanvasImage) imageObj;
-            selectedImage.flip(false); 
-            
-            if (canvasObj instanceof LeftCanvas) {
-                ((LeftCanvas) canvasObj).repaint();
-            }
-        }
     }
 }

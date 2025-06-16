@@ -81,6 +81,15 @@ class LeftCanvas extends CanvasPanel {
                 hoveredImage = null;
                 repaint();
             }
+            
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                isRotatingCanvas = false;
+                isRotating = false;
+                isPerformingSpecialAction = false;
+
+                setCursor(Cursor.getDefaultCursor());
+            }
         });
         
         addMouseMotionListener(new MouseAdapter() {
@@ -97,7 +106,40 @@ class LeftCanvas extends CanvasPanel {
             @Override
             public void mouseDragged(MouseEvent e) {
                 if (lastMousePosition == null) {
+                    lastMousePosition = e.getPoint();
                     return;
+                }
+                
+                // Check for special actions FIRST (before other actions)
+                if (selectedImage != null && selectedImage.getSourceType() != null && 
+                    !isRotating && !isRotatingCanvas) {
+                    
+                    ImageButton button = getButtonForType(selectedImage.getSourceType());
+                    if (button != null) {
+                        int requiredModifier = button.getActionKeyModifier();
+                        
+                        // Check if the required modifier keys are pressed
+                        if ((e.getModifiersEx() & requiredModifier) == requiredModifier) {
+                            isPerformingSpecialAction = true;
+                            isRotating = false;
+                            isRotatingCanvas = false;
+                            
+                            // Create a MouseEvent representing the last position
+                            MouseEvent lastEvent = new MouseEvent(
+                                e.getComponent(),
+                                MouseEvent.MOUSE_DRAGGED,
+                                e.getWhen() - 1,
+                                e.getModifiersEx(),
+                                lastMousePosition.x,
+                                lastMousePosition.y,
+                                e.getClickCount(),
+                                e.isPopupTrigger()
+                            );
+                            button.performSpecialAction(LeftCanvas.this, selectedImage, e, lastEvent, canvasRotation);
+                            lastMousePosition = e.getPoint();
+                            return; // Exit early to prevent other drag actions
+                        }
+                    }
                 }
                 
                 if (isRotatingCanvas) {
@@ -146,6 +188,7 @@ class LeftCanvas extends CanvasPanel {
                          selectedImage.getSourceType() != null) {
                     ImageButton button = getButtonForType(selectedImage.getSourceType());
                     if (button != null) {
+                        // FIX: Use LeftCanvas.this instead of this
                         button.performSpecialAction(
                             LeftCanvas.this, 
                             selectedImage, 
@@ -164,6 +207,8 @@ class LeftCanvas extends CanvasPanel {
                         );
                     }
                 }
+                
+                lastMousePosition = e.getPoint();
             }
         });
     }

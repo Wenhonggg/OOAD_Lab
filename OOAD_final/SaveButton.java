@@ -1,14 +1,14 @@
 import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics2D;
 import java.awt.event.*;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.Enumeration;
-import javax.imageio.ImageIO;
 import javax.swing.*;
+import java.awt.image.BufferedImage;
+import java.awt.Graphics2D;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.imageio.ImageIO;
+import java.awt.Dimension;
+import java.awt.Color;
 
 
 public class SaveButton extends JButton {
@@ -53,7 +53,7 @@ public class SaveButton extends JButton {
                             for (Enumeration<AbstractButton> buttons = canvasBtnGrp.getElements(); buttons.hasMoreElements(); ) {
                                 AbstractButton button = buttons.nextElement();
                                 if (button.isSelected()) {
-                                    selectedCanvas = button.getText(); 
+                                    selectedCanvas = button.getText();
                                     break;
                                 }
                             }
@@ -62,7 +62,7 @@ public class SaveButton extends JButton {
                             for (Enumeration<AbstractButton> buttons = fileTypeBtnGrp.getElements(); buttons.hasMoreElements(); ) {
                                 AbstractButton button = buttons.nextElement();
                                 if (button.isSelected()) {
-                                    selectedFormat = button.getText(); 
+                                    selectedFormat = button.getText();
                                     break;
                                 }
                             }
@@ -80,7 +80,7 @@ public class SaveButton extends JButton {
                                     saveRightCanvasAsJPG(SaveButton.this.rightCanvas, frame);
                                 }
                             }
-                            saveDialog.dispose(); 
+                            saveDialog.dispose();
                             
                         } else {
                             JOptionPane.showMessageDialog(saveDialog,
@@ -188,12 +188,8 @@ public class SaveButton extends JButton {
                         }
 
                         try {
-                            canvas.printInstructions(); 
-                            
-                            BufferedImage image = canvas.saveToImage();                        
-                            
+                            BufferedImage image = canvas.saveToImage();
                             ImageIO.write(image, format, file);
-                            
                             JOptionPane.showMessageDialog(parentFrame, "Image saved successfully to:\n" + file.getAbsolutePath());
                         } catch (Exception ex) {
                             ex.printStackTrace();

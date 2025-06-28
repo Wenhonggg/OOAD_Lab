@@ -7,7 +7,7 @@ public class Toolbar extends JToolBar {
     private JFrame parent;
     private LeftCanvas leftCanvas;
     private RightCanvas rightCanvas;
-    private SaveButton saveButton; // Store reference to save button
+    private SaveButton saveButton;
 
     private enum ButtonType {
         ANIMAL, FLOWER, CUSTOM
@@ -23,12 +23,10 @@ public class Toolbar extends JToolBar {
 
     private void initializeComponents() {
         add(new NewButton(this));
-        
-        // Store reference to save button so we can update it
+
         saveButton = new SaveButton(parent, leftCanvas, rightCanvas);
         add(saveButton);
-        
-        // Factory method approach
+
         for (int i = 0; i < 3; i++) {
             add(createImageButton(i));
         }
@@ -69,7 +67,6 @@ public class Toolbar extends JToolBar {
 
             Container container = leftCanvas.getParent();
             if (container != null) {
-                // Pass 'this' (Toolbar) as the third parameter
                 leftCanvas = new LeftCanvas(width, height, this);
                 mf.setLeftCanvas(leftCanvas);
 
@@ -84,7 +81,6 @@ public class Toolbar extends JToolBar {
     }
 
     public void createNewRightCanvas() {
-        // Find the container holding the right canvas
         Container container = rightCanvas.getParent();
         if (container != null) {
             DrawingToolPanel dtp = getDrawingToolPanel();
@@ -93,19 +89,8 @@ public class Toolbar extends JToolBar {
             container.add(rightCanvas);
             container.revalidate();
             container.repaint();
-            
-            // Update save button with new canvas reference
             saveButton.updateCanvases(leftCanvas, rightCanvas);
-            
-            System.out.println("=== NEW RIGHT CANVAS CREATED ===");
-            System.out.println("DrawingToolPanel: " + dtp);
-            System.out.println("New RightCanvas: " + rightCanvas);
-            System.out.println("================================");
         }
-    }
-
-    public RightCanvas getRightCanvas() {
-        return rightCanvas;
     }
 
     protected String getToolbarPosition() {
@@ -125,7 +110,6 @@ public class Toolbar extends JToolBar {
         }
     }
 
-    // Helper method to get the DrawingToolPanel from the toolbar
     private DrawingToolPanel getDrawingToolPanel() {
         for (Component comp : getComponents()) {
             if (comp instanceof DrawingToolPanel) {
@@ -133,9 +117,5 @@ public class Toolbar extends JToolBar {
             }
         }
         return null;
-    }
-
-    public String getType() {
-        return "Toolbar";
     }
 }

@@ -31,8 +31,6 @@ public class DrawingToolPanel extends JPanel {
     private JLabel sizeLabel;
     private JPanel jccPanel;
     private List<Color> savedColours;
-    
-    // State variables for drawing tools
     private boolean isEraser = false;
     private Color currentColor = Color.BLACK;
     private int currentSize = 10;
@@ -40,7 +38,6 @@ public class DrawingToolPanel extends JPanel {
     public DrawingToolPanel(JFrame f) {
         super();
         frame = f;
-        // initialize list of saved colours
         savedColours = new ArrayList<>();
         savedColours.add(Color.BLACK);
         savedColours.add(Color.RED);
@@ -52,7 +49,6 @@ public class DrawingToolPanel extends JPanel {
 
         setOpaque(false);
 
-        // create brush button
         brush = new JButton();
         brush.setIcon(new ImageIcon(ImageButton.resizeImage(new File("assets/toolbarIcons/brushIcon.png"), 30, 30)));
         brush.setBackground(new Color(238, 238, 238));
@@ -64,7 +60,6 @@ public class DrawingToolPanel extends JPanel {
             }
         });
 
-        // create eraser button
         eraser = new JButton();
         eraser.setIcon(new ImageIcon(ImageButton.resizeImage(new File("assets/toolbarIcons/eraserIcon.png"), 30, 30)));
         eraser.setBackground(new Color(238, 238, 238));
@@ -76,7 +71,6 @@ public class DrawingToolPanel extends JPanel {
             }
         });
 
-        // create slider to adjust pen/eraser size
         sliderPanel = new JPanel();
         sliderPanel.setOpaque(false);
         sizeSlider = new JSlider(1, 100, currentSize);
@@ -87,7 +81,6 @@ public class DrawingToolPanel extends JPanel {
 
         sizeLabel = new JLabel(String.valueOf(sizeSlider.getValue()));
         sizeLabel.setPreferredSize(new Dimension(20, 20));
-        // automatically update label and current size
         sizeSlider.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
@@ -101,7 +94,6 @@ public class DrawingToolPanel extends JPanel {
         });
         sliderPanel.add(sizeLabel);
 
-        // create colour chooser
         jccPanel = new JPanel();
         jccPanel.setOpaque(false);
         createColourPalettePanel(jccPanel, false);

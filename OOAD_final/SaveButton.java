@@ -53,7 +53,7 @@ public class SaveButton extends JButton {
                             for (Enumeration<AbstractButton> buttons = canvasBtnGrp.getElements(); buttons.hasMoreElements(); ) {
                                 AbstractButton button = buttons.nextElement();
                                 if (button.isSelected()) {
-                                    selectedCanvas = button.getText(); // "Left canvas" or "Right canvas"
+                                    selectedCanvas = button.getText(); 
                                     break;
                                 }
                             }
@@ -62,37 +62,31 @@ public class SaveButton extends JButton {
                             for (Enumeration<AbstractButton> buttons = fileTypeBtnGrp.getElements(); buttons.hasMoreElements(); ) {
                                 AbstractButton button = buttons.nextElement();
                                 if (button.isSelected()) {
-                                    selectedFormat = button.getText(); // "Save as PNG" or "Save as JPG"
+                                    selectedFormat = button.getText(); 
                                     break;
                                 }
                             }
 
                             if ("Left canvas".equals(selectedCanvas)) {
-                                //export left canvas
                                 System.out.println("User choose: Left canvas");
                                 if ("Save as PNG".equals(selectedFormat)) {
-                                    //save as png
                                     System.out.println("User choose to save as PNG");
                                     saveLeftCanvasAsPNG(SaveButton.this.leftCanvas, frame);
                                 } else if ("Save as JPG".equals(selectedFormat)) {
-                                    //save as jpg
                                     System.out.println("User choose to save as JPG");
                                     saveLeftCanvasAsJPG(SaveButton.this.leftCanvas, frame);
                                 }
                             } else if ("Right canvas".equals(selectedCanvas)) {
-                                //export right canvas
                                 System.out.println("User choose: Right canvas");
                                 if ("Save as PNG".equals(selectedFormat)) {
-                                    //save as png
                                     System.out.println("User choose to save as PNG");
                                     saveRightCanvasAsPNG(SaveButton.this.rightCanvas, frame);
                                 } else if ("Save as JPG".equals(selectedFormat)) {
-                                    //save as jpg
                                     System.out.println("User choose to save as JPG");
                                     saveRightCanvasAsJPG(SaveButton.this.rightCanvas, frame);
                                 }
                             }
-                            saveDialog.dispose(); // Close the dialog after saving
+                            saveDialog.dispose(); 
                             
                         } else {
                             JOptionPane.showMessageDialog(saveDialog,
@@ -101,7 +95,6 @@ public class SaveButton extends JButton {
                         }
                     }
 
-                    // Separate methods for left canvas (uses original logic)
                     private void saveLeftCanvasAsPNG(LeftCanvas canvas, JFrame parentFrame) {
                         saveLeftCanvasImage(canvas, parentFrame, "png");
                     }
@@ -110,7 +103,6 @@ public class SaveButton extends JButton {
                         saveLeftCanvasImage(canvas, parentFrame, "jpg");
                     }
 
-                    // Separate methods for right canvas (uses custom saveToImage method)
                     private void saveRightCanvasAsPNG(RightCanvas canvas, JFrame parentFrame) {
                         saveRightCanvasImage(canvas, parentFrame, "png");
                     }
@@ -119,7 +111,6 @@ public class SaveButton extends JButton {
                         saveRightCanvasImage(canvas, parentFrame, "jpg");
                     }
 
-                    // Original method for LeftCanvas
                     private void saveLeftCanvasImage(LeftCanvas canvas, JFrame parentFrame, String format) {
                         JFileChooser fileChooser = new JFileChooser();
                         fileChooser.setDialogTitle("Save Image");
@@ -172,7 +163,6 @@ public class SaveButton extends JButton {
                         }
                     }
 
-                    // NEW method specifically for RightCanvas
                     private void saveRightCanvasImage(RightCanvas canvas, JFrame parentFrame, String format) {
                         JFileChooser fileChooser = new JFileChooser();
                         fileChooser.setDialogTitle("Save Image");
@@ -204,15 +194,12 @@ public class SaveButton extends JButton {
                         }
 
                         try {
-                            // Debug output before saving
                             System.out.println("=== SAVE BUTTON DEBUG ===");
                             System.out.println("About to save RightCanvas with " + canvas.toString());
-                            canvas.printInstructions(); // This calls the debug method in RightCanvas
+                            canvas.printInstructions(); 
                             
-                            // Use the custom saveToImage method from RightCanvas
                             BufferedImage image = canvas.saveToImage();
                             
-                            // Debug: Print image info
                             System.out.println("Image created with dimensions: " + image.getWidth() + "x" + image.getHeight());
                             
                             ImageIO.write(image, format, file);
@@ -236,7 +223,6 @@ public class SaveButton extends JButton {
         });
     }
 
-    // Method to update canvas references when new canvases are created
     public void updateCanvases(LeftCanvas leftCanvas, RightCanvas rightCanvas) {
         this.leftCanvas = leftCanvas;
         this.rightCanvas = rightCanvas;

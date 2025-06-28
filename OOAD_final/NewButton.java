@@ -10,7 +10,6 @@ public class NewButton extends JButton {
 
     public NewButton(Toolbar tb) {
         super();
-        // Fixed the missing parenthesis in this line only
         setIcon(new ImageIcon(ImageButton.resizeImage(new File("assets/toolbarIcons/newIcon.png"), 30, 30)));
         parent = tb;
         addActionListener(new ActionListener() {

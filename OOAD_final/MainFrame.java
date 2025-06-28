@@ -73,7 +73,7 @@ public class MainFrame extends JFrame {
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.X_AXIS));
         mainPanel.setBackground(Color.GRAY);
 
-        leftCanvas = new LeftCanvas(canvasWidth, canvasHeight, null); // Store reference
+        leftCanvas = new LeftCanvas(canvasWidth, canvasHeight, null); 
         DrawingToolPanel dtp = new DrawingToolPanel(this);
         RightCanvas rightCanvas = new RightCanvas(dtp);
 
@@ -102,24 +102,16 @@ public class MainFrame extends JFrame {
         mainPanel.add(rightWrapper);
 
         add(mainPanel);
-        
-        // Add toolbar after canvases are created
         Toolbar tb = new Toolbar(this, leftCanvas, rightCanvas);
-        
-        // Update the toolbar reference in leftCanvas
         leftCanvas.setToolbar(tb);
-        
         add(tb, BorderLayout.NORTH);
-
         tb.createNewRightCanvas();
     }
     
-    // Add getter method
     public LeftCanvas getLeftCanvas() {
         return leftCanvas;
     }
 
-    // Add this method to update the reference
     public void setLeftCanvas(LeftCanvas newCanvas) {
         this.leftCanvas = newCanvas;
     }

@@ -55,7 +55,6 @@ public class DrawingToolPanel extends JPanel {
         brush.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                System.out.println("Brush selected");
                 isEraser = false;
             }
         });
@@ -66,7 +65,6 @@ public class DrawingToolPanel extends JPanel {
         eraser.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                System.out.println("Eraser selected");
                 isEraser = true;
             }
         });
@@ -86,9 +84,6 @@ public class DrawingToolPanel extends JPanel {
             public void stateChanged(ChangeEvent e) {
                 currentSize = sizeSlider.getValue();
                 sizeLabel.setText(String.valueOf(currentSize));
-                if (!sizeSlider.getValueIsAdjusting()) {
-                    System.out.println("Brush/Eraser size changed to " + currentSize);
-                }
                 repaint();
             }
         });
@@ -280,7 +275,6 @@ public class DrawingToolPanel extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 currentColor = color;
                 isEraser = false;
-                System.out.println(color + " chosen");
             }
         });
         return btn;
@@ -317,7 +311,6 @@ public class DrawingToolPanel extends JPanel {
                 if (selectedColor != null) {
                     currentColor = selectedColor;
                     isEraser = false;
-                    System.out.println(selectedColor + " chosen");
                 }
             }
         });

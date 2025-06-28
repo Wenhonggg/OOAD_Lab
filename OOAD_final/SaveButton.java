@@ -1,14 +1,14 @@
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics2D;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.Enumeration;
-import javax.swing.*;
-import java.awt.image.BufferedImage;
-import java.awt.Graphics2D;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.imageio.ImageIO;
-import java.awt.Dimension;
-import java.awt.Color;
+import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 
 public class SaveButton extends JButton {
@@ -68,21 +68,15 @@ public class SaveButton extends JButton {
                             }
 
                             if ("Left canvas".equals(selectedCanvas)) {
-                                System.out.println("User choose: Left canvas");
                                 if ("Save as PNG".equals(selectedFormat)) {
-                                    System.out.println("User choose to save as PNG");
                                     saveLeftCanvasAsPNG(SaveButton.this.leftCanvas, frame);
                                 } else if ("Save as JPG".equals(selectedFormat)) {
-                                    System.out.println("User choose to save as JPG");
                                     saveLeftCanvasAsJPG(SaveButton.this.leftCanvas, frame);
                                 }
                             } else if ("Right canvas".equals(selectedCanvas)) {
-                                System.out.println("User choose: Right canvas");
                                 if ("Save as PNG".equals(selectedFormat)) {
-                                    System.out.println("User choose to save as PNG");
                                     saveRightCanvasAsPNG(SaveButton.this.rightCanvas, frame);
                                 } else if ("Save as JPG".equals(selectedFormat)) {
-                                    System.out.println("User choose to save as JPG");
                                     saveRightCanvasAsJPG(SaveButton.this.rightCanvas, frame);
                                 }
                             }
@@ -194,17 +188,11 @@ public class SaveButton extends JButton {
                         }
 
                         try {
-                            System.out.println("=== SAVE BUTTON DEBUG ===");
-                            System.out.println("About to save RightCanvas with " + canvas.toString());
                             canvas.printInstructions(); 
                             
-                            BufferedImage image = canvas.saveToImage();
-                            
-                            System.out.println("Image created with dimensions: " + image.getWidth() + "x" + image.getHeight());
+                            BufferedImage image = canvas.saveToImage();                        
                             
                             ImageIO.write(image, format, file);
-                            System.out.println("Image written to file: " + file.getAbsolutePath());
-                            System.out.println("=========================");
                             
                             JOptionPane.showMessageDialog(parentFrame, "Image saved successfully to:\n" + file.getAbsolutePath());
                         } catch (Exception ex) {
@@ -226,10 +214,6 @@ public class SaveButton extends JButton {
     public void updateCanvases(LeftCanvas leftCanvas, RightCanvas rightCanvas) {
         this.leftCanvas = leftCanvas;
         this.rightCanvas = rightCanvas;
-        System.out.println("=== SAVE BUTTON CANVAS UPDATE ===");
-        System.out.println("Updated LeftCanvas: " + leftCanvas);
-        System.out.println("Updated RightCanvas: " + rightCanvas);
-        System.out.println("==================================");
     }
 
     private JPanel createBtnPanel(String labelText, ButtonGroup grp, String text1, String text2) {
